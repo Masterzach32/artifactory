@@ -1,0 +1,32 @@
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# IntelliJ
+out/
+.idea
+*.iml
+*.iws
+*.ipr
+
+# Mac
+.DS_Store
+
+# Maven
+log/
+target/
+
+# Gradle
+.gradle/
+build/
+.gradletasknamecache
+
+# Gource
+grav.perl
+
+# npm
+node_modules/
+
+# Add other files here:
