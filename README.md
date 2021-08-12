@@ -7,6 +7,7 @@ Fabric and Forge are the only two modloaders supported. This plugin is currently
 to remain unstable until a 1.0 release. (This means breaking changes can happen any time!)
 
 You can find the latest version on the [gradle plugin portal](https://plugins.gradle.org/plugin/com.spicymemes.artifactory).
+Snapshot versions are available in the snapshots repository: https://maven.masterzach32.net/artifactory/gradle-plugins/
 
 To accomplish this, your mod should be divided into three sub-projects: `common`, `fabric`, and `forge`. Then in each
 `build.gradle.kts` file, apply the plugin after each modloader's respective plugin. Artifactory then automatically sets 
