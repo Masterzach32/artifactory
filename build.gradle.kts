@@ -36,8 +36,8 @@ gradlePlugin {
 }
 
 pluginBundle {
-    website = "https://github.com/SummerModVenture"
-    vcsUrl = "https://github.com/SummerModVenture/artifactory"
+    website = "https://github.com/Masterzach32/"
+    vcsUrl = "https://github.com/Masterzach32/artifactory/"
     tags = listOf("minecraft")
 }
 
