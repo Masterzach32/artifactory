@@ -65,3 +65,6 @@ jobs:
           java-version: 16
       - name: Build and Publish Artifacts
         run: ./gradlew -x test publish publishPlugins -Pgradle.publish.key=${{ secrets.gradle_publish_key }} -Pgradle.publish.secret=${{ secrets.gradle_publish_secret }}
+        env:
+          ORG_GRADLE_PROJECT_mavenUsername: ${{ secrets.maven_username }}
+          ORG_GRADLE_PROJECT_mavenPassword: ${{ secrets.maven_password }}
