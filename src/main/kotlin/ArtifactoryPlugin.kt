@@ -35,19 +35,5 @@ class ArtifactoryPlugin : Plugin<Project> {
             apiImplementation,
             apiRuntimeOnly
         )
-
-//        val sourcesJar by project.tasks.registering(Jar::class) {
-//            archiveBaseName.set("")
-//            archiveClassifier.set("sources")
-//            //from(sourceSets.main.get().allSource)
-//        }
-//
-//        val modJar by project.tasks.registering(Jar::class) {
-//            archiveBaseName.set("")
-//            archiveClassifier.set("obf")
-//            //from(sourceSets.main.get().output)
-//            //manifest()
-//            finalizedBy("reobfJar")
-//        }
     }
 }

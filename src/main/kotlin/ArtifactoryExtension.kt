@@ -4,12 +4,15 @@ import org.gradle.api.*
 import org.gradle.api.artifacts.*
 import org.gradle.api.file.*
 import org.gradle.api.plugins.*
+import org.gradle.api.publish.*
+import org.gradle.api.publish.maven.*
+import org.gradle.api.publish.maven.plugins.*
 import org.gradle.api.tasks.*
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.*
 
 open class ArtifactoryExtension(
-    private val project: Project,
+    val project: Project,
     private val sourceSets: SourceSetContainer,
     private val apiSourceSet: SourceSet,
     private val apiImplementation: NamedDomainObjectProvider<Configuration>,
@@ -19,14 +22,12 @@ open class ArtifactoryExtension(
     private var isSetupFor: String? = null
 
     var archivesBaseName: String by project.extensions.getByType<BasePluginExtension>().archivesName
+    val apiArchivesBaseName: String
+        get() = "$archivesBaseName-api"
 
-    private fun checkIsSetup(name: String) {
-        if (isSetupFor != null)
-            error("Cannot setup module \"$name\": It has already been configured as \"$isSetupFor\".")
-        else
-            isSetupFor = name
-    }
-
+    /**
+     * Setup this project as a common module. Requires that the `fabric-loom` plugin be applied.
+     */
     fun common() {
         checkIsSetup("common")
         if(!project.plugins.hasPlugin("fabric-loom"))
@@ -35,12 +36,27 @@ open class ArtifactoryExtension(
         apiImplementation {
             extendsFrom(project.configurations["compileClasspath"])
         }
+
+        project.plugins.withType<MavenPublishPlugin> {
+            project.extensions.configure<PublishingExtension> {
+                publications {
+                    register<MavenPublication>("api") {
+                        artifactId = apiArchivesBaseName
+                    }
+                }
+            }
+        }
     }
 
+    /**
+     * Setup this project as a fabric module. Requires that the `fabric-loom` plugin be applied.
+     */
     fun fabric(commonProject: Project) {
         checkIsSetup("fabric")
         if(!project.plugins.hasPlugin("fabric-loom"))
             error("Project ${project.name} of module type \"fabric\" needs to have the fabric-loom plugin applied.")
+
+        archivesBaseName += "-fabric"
 
         val commonSourceSets = commonProject.extensions.getByType<SourceSetContainer>()
         apiSourceSet.apply {
@@ -63,19 +79,33 @@ open class ArtifactoryExtension(
         project.tasks.named<ProcessResources>("processResources") {
             duplicatesStrategy = DuplicatesStrategy.FAIL
             inputs.property("version", project.version)
-            filesMatching("META-INF/mods.toml") { expand("version" to project.version) }
+            filesMatching("fabric.mod.json") { expand("version" to project.version) }
             from(commonSourceSets["main"].resources)
+        }
+
+        project.plugins.withType<MavenPublishPlugin> {
+            project.extensions.configure<PublishingExtension> {
+                publications {
+                    register<MavenPublication>("mod") {
+                        artifactId = archivesBaseName
+                    }
+                    register<MavenPublication>("api") {
+                        artifactId = apiArchivesBaseName
+                    }
+                }
+            }
         }
     }
 
-    fun fabric(commonProject: ProjectDependency) = fabric(commonProject.dependencyProject)
-
-    fun fabric() = fabric(project.rootProject.subprojects.first { it.name == "common" })
-
+    /**
+     * Setup this project as a forge module. Requires that the `net.minecraftforge.gradle` plugin be applied.
+     */
     fun forge(commonProject: Project) {
         checkIsSetup("forge")
         if(!project.plugins.hasPlugin("net.minecraftforge.gradle"))
             error("Project ${project.name} of module type \"forge\" needs to have the net.minecraftforge.gradle plugin applied.")
+
+        archivesBaseName += "-forge"
 
         val commonSourceSets = commonProject.extensions.getByType<SourceSetContainer>()
         apiSourceSet.apply {
@@ -99,9 +129,40 @@ open class ArtifactoryExtension(
         project.repositories {
             maven("https://maven.minecraftforge.net")
         }
+
+        project.tasks.named<ProcessResources>("processResources") {
+            duplicatesStrategy = DuplicatesStrategy.FAIL
+            inputs.property("version", project.version)
+            filesMatching("META-INF/mods.toml") { expand("version" to project.version) }
+            from(commonSourceSets["main"].resources)
+        }
+
+        project.plugins.withType<MavenPublishPlugin> {
+            project.extensions.configure<PublishingExtension> {
+                publications {
+                    register<MavenPublication>("mod") {
+                        artifactId = archivesBaseName
+                    }
+                    register<MavenPublication>("api") {
+                        artifactId = apiArchivesBaseName
+                    }
+                }
+            }
+        }
     }
 
-    fun forge(commonProject: ProjectDependency) = forge(commonProject.dependencyProject)
-
-    fun forge() = forge(project.rootProject.subprojects.first { it.name == "common" })
+    private fun checkIsSetup(name: String) {
+        if (isSetupFor != null)
+            error("Cannot setup module \"$name\": It has already been configured as \"$isSetupFor\".")
+        else
+            isSetupFor = name
+    }
 }
+
+fun ArtifactoryExtension.fabric(commonProject: ProjectDependency) = fabric(commonProject.dependencyProject)
+
+fun ArtifactoryExtension.fabric() = fabric(project.rootProject.subprojects.first { it.name == "common" })
+
+fun ArtifactoryExtension.forge(commonProject: ProjectDependency) = forge(commonProject.dependencyProject)
+
+fun ArtifactoryExtension.forge() = forge(project.rootProject.subprojects.first { it.name == "common" })
