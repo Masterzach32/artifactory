@@ -265,12 +265,24 @@ open class ArtifactoryExtension(
         }
     }
 
+    /**
+     * Setup this project as a fabric module. Requires that the `fabric-loom` plugin be applied.
+     */
     fun fabric(commonProject: ProjectDependency) = fabric(commonProject.dependencyProject)
 
+    /**
+     * Setup this project as a fabric module. Requires that the `fabric-loom` plugin be applied.
+     */
     fun fabric() = fabric(project.rootProject.subprojects.first { it.name == "common" })
 
+    /**
+     * Setup this project as a forge module. Requires that the `net.minecraftforge.gradle` plugin be applied.
+     */
     fun forge(commonProject: ProjectDependency) = forge(commonProject.dependencyProject)
 
+    /**
+     * Setup this project as a forge module. Requires that the `net.minecraftforge.gradle` plugin be applied.
+     */
     fun forge() = forge(project.rootProject.subprojects.first { it.name == "common" })
 
     fun applyForgeMissingLibsTempfix() {

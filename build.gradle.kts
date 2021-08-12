@@ -52,10 +52,6 @@ tasks.publishPlugins {
 }
 
 publishing {
-    publications {
-        logger.lifecycle(this.toList().map { it.name }.toString())
-    }
-
     repositories {
         if (isSnapshot) {
             val mavenUsername: String? by project
