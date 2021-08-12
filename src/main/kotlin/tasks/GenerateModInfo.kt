@@ -4,7 +4,7 @@ import org.gradle.api.*
 import org.gradle.api.provider.*
 import org.gradle.api.tasks.*
 
-abstract class GenerateModInfoTask : DefaultTask() {
+abstract class GenerateModInfo : DefaultTask() {
 
     @get:Input
     abstract val modId: Property<String>
@@ -22,6 +22,7 @@ abstract class GenerateModInfoTask : DefaultTask() {
     abstract val fileName: Property<String>
 
     init {
+        group = "artifactory"
         description = "Generates the ModInfo.kt source file."
         project.findProperty("modId")?.toString()?.also(modId::convention)
         project.findProperty("modName")?.toString()?.also(modName::convention)
@@ -35,7 +36,7 @@ abstract class GenerateModInfoTask : DefaultTask() {
         val packagePath = location.get().replace(".", "/")
         project.mkdir("src/main/generated/$packagePath")
         project.file("src/main/generated/$packagePath/${fileName.get()}").writeText("""
-            package $location
+            package ${location.get()}
             
             const val MOD_ID = "${modId.get()}"
             const val MOD_NAME = "${modName.get()}"

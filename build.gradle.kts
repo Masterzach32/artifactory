@@ -16,13 +16,13 @@ val isSnapshot = !isRelease
 
 repositories {
     mavenCentral()
-//    maven("https://maven.minecraftforge.net")
+    maven("https://maven.minecraftforge.net")
 //    maven("https://maven.fabricmc.net")
 }
 
 dependencies {
     implementation(gradleKotlinDsl())
-//    implementation("net.minecraftforge.gradle:ForgeGradle:5.1.+")
+    implementation("net.minecraftforge.gradle:ForgeGradle:5.1.+")
 //    implementation("fabric-loom:fabric-loom.gradle.plugin:0.9.+")
 }
 
@@ -52,6 +52,10 @@ tasks.publishPlugins {
 }
 
 publishing {
+    publications {
+        logger.lifecycle(this.toList().map { it.name }.toString())
+    }
+
     repositories {
         if (isSnapshot) {
             val mavenUsername: String? by project

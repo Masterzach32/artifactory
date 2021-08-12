@@ -1,5 +1,7 @@
 package com.spicymemes.artifactory
 
+import net.minecraftforge.gradle.userdev.*
+import net.minecraftforge.gradle.userdev.tasks.*
 import org.gradle.api.*
 import org.gradle.api.artifacts.*
 import org.gradle.api.file.*
@@ -8,18 +10,24 @@ import org.gradle.api.publish.*
 import org.gradle.api.publish.maven.*
 import org.gradle.api.publish.maven.plugins.*
 import org.gradle.api.tasks.*
+import org.gradle.api.tasks.bundling.*
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.*
+import java.io.*
 
 open class ArtifactoryExtension(
-    val project: Project,
-    private val sourceSets: SourceSetContainer,
-    private val apiSourceSet: SourceSet,
-    private val apiImplementation: NamedDomainObjectProvider<Configuration>,
-    private val apiRuntimeOnly: NamedDomainObjectProvider<Configuration>
+    private val project: Project,
+    private val archivesVersion: String
 ) {
 
     private var isSetupFor: String? = null
+
+    private val sourceSets = project.the<SourceSetContainer>()
+
+    private val apiImplementation: NamedDomainObjectProvider<Configuration> by project.configurations.existing
+    private val apiRuntimeOnly: NamedDomainObjectProvider<Configuration> by project.configurations.existing
+
+    var fullModVersion: String = project.version.toString()
 
     var archivesBaseName: String by project.extensions.getByType<BasePluginExtension>().archivesName
         private set
@@ -38,12 +46,29 @@ open class ArtifactoryExtension(
             extendsFrom(project.configurations["compileClasspath"])
         }
 
+        val apiJar by project.tasks.existing(Jar::class) {
+            archiveBaseName.set(apiArchivesBaseName)
+        }
+        val apiSourcesJar by project.tasks.existing(Jar::class) {
+            archiveBaseName.set(apiArchivesBaseName)
+        }
+        val remapJar by project.tasks.existing
+        val remapSourcesJar by project.tasks.existing
+
         project.plugins.withType<MavenPublishPlugin> {
-            project.extensions.configure<PublishingExtension> {
+            project.configure<PublishingExtension> {
                 publications {
-                    register<MavenPublication>("api") {
+                    named<MavenPublication>("api") {
                         artifactId = apiArchivesBaseName
+                        artifact(apiJar) {
+                            builtBy(remapJar)
+                        }
+                        artifact(apiSourcesJar) {
+                            builtBy(remapSourcesJar)
+                        }
                     }
+
+                    removeIf { it.name == "mod" }
                 }
             }
         }
@@ -59,8 +84,8 @@ open class ArtifactoryExtension(
 
         archivesBaseName += "-fabric"
 
-        val commonSourceSets = commonProject.extensions.getByType<SourceSetContainer>()
-        apiSourceSet.apply {
+        val commonSourceSets = commonProject.the<SourceSetContainer>()
+        sourceSets["api"].apply {
             commonSourceSets["api"].also { commonApi ->
                 compileClasspath += commonApi.output
                 runtimeClasspath += commonApi.output
@@ -84,14 +109,46 @@ open class ArtifactoryExtension(
             from(commonSourceSets["main"].resources)
         }
 
+        val jar by project.tasks.existing(Jar::class) {
+            fromOutputs(commonSourceSets.modSets)
+        }
+
+        val sourcesJar by project.tasks.existing(Jar::class) {
+            fromSources(commonSourceSets.modSets)
+        }
+
+        val apiJar by project.tasks.existing(Jar::class) {
+            archiveBaseName.set(apiArchivesBaseName)
+            from(commonSourceSets["api"].output)
+        }
+
+        val apiSourcesJar by project.tasks.existing(Jar::class) {
+            archiveBaseName.set(apiArchivesBaseName)
+            from(commonSourceSets["api"].allSource)
+        }
+
+        val remapJar by project.tasks.existing
+        val remapSourcesJar by project.tasks.existing
         project.plugins.withType<MavenPublishPlugin> {
-            project.extensions.configure<PublishingExtension> {
+            project.configure<PublishingExtension> {
                 publications {
-                    register<MavenPublication>("mod") {
+                    named<MavenPublication>("mod") {
                         artifactId = archivesBaseName
+                        artifact(jar) {
+                            builtBy(remapJar)
+                        }
+                        artifact(sourcesJar) {
+                            builtBy(remapSourcesJar)
+                        }
                     }
-                    register<MavenPublication>("api") {
+                    named<MavenPublication>("api") {
                         artifactId = apiArchivesBaseName
+                        artifact(apiJar) {
+                            builtBy(remapJar)
+                        }
+                        artifact(apiSourcesJar) {
+                            builtBy(remapSourcesJar)
+                        }
                     }
                 }
             }
@@ -108,8 +165,8 @@ open class ArtifactoryExtension(
 
         archivesBaseName += "-forge"
 
-        val commonSourceSets = commonProject.extensions.getByType<SourceSetContainer>()
-        apiSourceSet.apply {
+        val commonSourceSets = commonProject.the<SourceSetContainer>()
+        sourceSets["api"].apply {
             commonSourceSets["api"].also { commonApi ->
                 compileClasspath += commonApi.output
             }
@@ -138,16 +195,91 @@ open class ArtifactoryExtension(
             from(commonSourceSets["main"].resources)
         }
 
+        val jar by project.tasks.existing(Jar::class) {
+            fromOutputs(commonSourceSets.modSets)
+            finalizedBy("reobfJar")
+        }
+
+        val sourcesJar by project.tasks.existing(Jar::class) {
+            fromSources(commonSourceSets.modSets)
+        }
+
+        val deobfJar by project.tasks.registering(Jar::class) {
+            jarConfig(archivesVersion)
+            archiveClassifier.set("deobf")
+            fromOutputs(commonSourceSets.modSets)
+            fromOutputs(sourceSets.modSets)
+        }
+
+        val apiJar by project.tasks.existing(Jar::class) {
+            archiveBaseName.set(apiArchivesBaseName)
+            from(commonSourceSets["api"].output)
+            finalizedBy("reobfApiJar")
+        }
+
+        val apiSourcesJar by project.tasks.existing(Jar::class) {
+            archiveBaseName.set(apiArchivesBaseName)
+            from(commonSourceSets["api"].allSource)
+        }
+
+        val apiDeobfJar by project.tasks.registering(Jar::class) {
+            jarConfig(archivesVersion)
+            archiveBaseName.set(apiArchivesBaseName)
+            archiveClassifier.set("deobf")
+            from(commonSourceSets["api"].output)
+            from(sourceSets["api"].output)
+        }
+
+        project.tasks.named("assemble") {
+            dependsOn(deobfJar, apiDeobfJar)
+        }
+
+        project.extensions.configure<NamedDomainObjectContainer<RenameJarInPlace>>("reobf") {
+            create("apiJar") {
+                classpath.from(sourceSets["api"].compileClasspath)
+            }
+            create("jar") {
+                classpath.from(sourceSets["main"].compileClasspath)
+            }
+        }
+
+        project.tasks
+
         project.plugins.withType<MavenPublishPlugin> {
-            project.extensions.configure<PublishingExtension> {
+            project.configure<PublishingExtension> {
                 publications {
-                    register<MavenPublication>("mod") {
+                    named<MavenPublication>("mod") {
                         artifactId = archivesBaseName
+                        artifact(jar)
+                        artifact(sourcesJar)
+                        artifact(deobfJar)
                     }
-                    register<MavenPublication>("api") {
+                    named<MavenPublication>("api") {
                         artifactId = apiArchivesBaseName
+                        artifact(apiJar)
+                        artifact(apiSourcesJar)
+                        artifact(apiDeobfJar)
                     }
                 }
+            }
+        }
+    }
+
+    fun fabric(commonProject: ProjectDependency) = fabric(commonProject.dependencyProject)
+
+    fun fabric() = fabric(project.rootProject.subprojects.first { it.name == "common" })
+
+    fun forge(commonProject: ProjectDependency) = forge(commonProject.dependencyProject)
+
+    fun forge() = forge(project.rootProject.subprojects.first { it.name == "common" })
+
+    fun applyForgeMissingLibsTempfix() {
+        project.the<UserDevExtension>().runs.all {
+            lazyToken("minecraft_classpath") {
+                project.configurations["library"]
+                    .copyRecursive()
+                    .resolve()
+                    .joinToString(File.pathSeparator) { it.absolutePath }
             }
         }
     }
@@ -159,11 +291,3 @@ open class ArtifactoryExtension(
             isSetupFor = name
     }
 }
-
-fun ArtifactoryExtension.fabric(commonProject: ProjectDependency) = fabric(commonProject.dependencyProject)
-
-fun ArtifactoryExtension.fabric() = fabric(project.rootProject.subprojects.first { it.name == "common" })
-
-fun ArtifactoryExtension.forge(commonProject: ProjectDependency) = forge(commonProject.dependencyProject)
-
-fun ArtifactoryExtension.forge() = forge(project.rootProject.subprojects.first { it.name == "common" })

@@ -3,8 +3,11 @@ package com.spicymemes.artifactory
 import org.gradle.api.*
 import org.gradle.api.artifacts.*
 import org.gradle.api.plugins.*
+import org.gradle.api.publish.*
+import org.gradle.api.publish.maven.*
+import org.gradle.api.publish.maven.plugins.*
 import org.gradle.api.tasks.*
-import org.gradle.jvm.tasks.*
+import org.gradle.api.tasks.bundling.*
 import org.gradle.kotlin.dsl.*
 
 class ArtifactoryPlugin : Plugin<Project> {
@@ -23,17 +26,71 @@ class ArtifactoryPlugin : Plugin<Project> {
             runtimeClasspath += apiSourceSet.output
         }
 
-        val configurations = project.configurations
-        val apiImplementation = configurations.named(apiSourceSet.implementationConfigurationName)
-        val apiRuntimeOnly = configurations.named(apiSourceSet.runtimeOnlyConfigurationName)
+        if (project.name == "forge") {
+            project.configurations.register("library").also { library ->
+                project.configurations.named("implementation") {
+                    extendsFrom(library.get())
+                }
+            }
+        }
 
-        val artifactoryExtension = project.extensions.create<ArtifactoryExtension>(
+        val archivesBaseName: String = project.findProperty("archivesBaseName")?.toString()
+            ?: project.findProperty("archivesName")?.toString()
+            ?: project.findProperty("modId")?.toString()
+            ?: project.name
+        project.the<BasePluginExtension>().archivesName.set(archivesBaseName)
+
+        val mcVersion: String? = project.the<VersionCatalog>().findVersion("minecraft").orElse(null)?.requiredVersion
+            ?: project.findProperty("mcVersion")?.toString()
+            ?: project.findProperty("minecraftVersion")?.toString()
+        val archivesVersion: String = if (mcVersion != null)
+            "$mcVersion-${project.version}"
+        else
+            "${project.version}"
+
+        project.extensions.create<ArtifactoryExtension>(
             "artifactory",
             project,
-            sourceSets,
-            apiSourceSet,
-            apiImplementation,
-            apiRuntimeOnly
+            archivesVersion,
         )
+
+        val jar by project.tasks.existing(Jar::class) {
+            jarConfig(archivesVersion)
+            from(sourceSets["api"].output)
+        }
+
+        val sourcesJar by project.tasks.registering(Jar::class) {
+            jarConfig(archivesVersion)
+            archiveClassifier.set("sources")
+            fromSources(sourceSets.modSets)
+        }
+
+        val apiJar by project.tasks.registering(Jar::class) {
+            jarConfig(archivesVersion)
+            from(sourceSets["api"].output)
+        }
+
+        val apiSourcesJar by project.tasks.registering(Jar::class) {
+            jarConfig(archivesVersion)
+            archiveClassifier.set("sources")
+            from(sourceSets["api"].allSource)
+        }
+
+        project.tasks.named("assemble") {
+            dependsOn(sourcesJar, apiJar, apiSourcesJar)
+        }
+
+        project.plugins.withType<MavenPublishPlugin> {
+            project.configure<PublishingExtension> {
+                publications {
+                    register<MavenPublication>("mod") {
+                        version = archivesVersion
+                    }
+                    register<MavenPublication>("api") {
+                        version = archivesVersion
+                    }
+                }
+            }
+        }
     }
 }
