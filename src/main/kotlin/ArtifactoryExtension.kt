@@ -22,6 +22,7 @@ open class ArtifactoryExtension(
     private var isSetupFor: String? = null
 
     var archivesBaseName: String by project.extensions.getByType<BasePluginExtension>().archivesName
+        private set
     val apiArchivesBaseName: String
         get() = "$archivesBaseName-api"
 
@@ -153,7 +154,7 @@ open class ArtifactoryExtension(
 
     private fun checkIsSetup(name: String) {
         if (isSetupFor != null)
-            error("Cannot setup module \"$name\": It has already been configured as \"$isSetupFor\".")
+            error("Cannot configure module \"$name\": This project has already been configured as \"$isSetupFor\".")
         else
             isSetupFor = name
     }

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.*
+
 plugins {
     kotlin("jvm") version "1.5.21"
     `java-gradle-plugin`
@@ -14,14 +16,18 @@ val isSnapshot = !isRelease
 
 repositories {
     mavenCentral()
-    maven("https://maven.minecraftforge.net")
-    maven("https://maven.fabricmc.net")
+//    maven("https://maven.minecraftforge.net")
+//    maven("https://maven.fabricmc.net")
 }
 
 dependencies {
     implementation(gradleKotlinDsl())
 //    implementation("net.minecraftforge.gradle:ForgeGradle:5.1.+")
 //    implementation("fabric-loom:fabric-loom.gradle.plugin:0.9.+")
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_16.toString()
 }
 
 gradlePlugin {
