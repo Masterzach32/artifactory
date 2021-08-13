@@ -51,7 +51,6 @@ class FabricConfiguration(project: Project, commonProject: Project) : AbstractMo
         val jar by tasks.existing(Jar::class) {
             fromOutputs(commonSourceSets.modSets)
         }
-
         val sourcesJar by tasks.existing(Jar::class) {
             fromSources(commonSourceSets.modSets)
         }
@@ -60,21 +59,32 @@ class FabricConfiguration(project: Project, commonProject: Project) : AbstractMo
             archiveBaseName.set(apiArchivesBaseName)
             from(commonSourceSets["api"].output)
         }
-
         val apiSourcesJar by tasks.existing(Jar::class) {
             archiveBaseName.set(apiArchivesBaseName)
             from(commonSourceSets["api"].allSource)
         }
 
-        val remapJar by tasks.existing
-        val remapSourcesJar by tasks.existing
+        val remapJar by tasks.existing(RemapJarTask::class) {
+            jarConfig(archivesVersion)
+        }
+        val remapSourcesJar by tasks.existing(RemapJarTask::class) {
+            jarConfig(archivesVersion)
+        }
         val remapApiJar by tasks.registering(RemapJarTask::class) {
+            jarConfig(archivesVersion)
+            dependsOn(apiJar)
             group = Constants.TaskGroup.FABRIC
             input.set(apiJar.flatMap { it.archiveFile })
         }
         val remapApiSourcesJar by tasks.registering(RemapJarTask::class) {
+            jarConfig(archivesVersion)
+            dependsOn(apiSourcesJar)
             group = Constants.TaskGroup.FABRIC
             input.set(apiSourcesJar.flatMap { it.archiveFile })
+        }
+
+        project.tasks.named("assemble") {
+            dependsOn(remapApiJar, remapApiSourcesJar)
         }
         plugins.withType<MavenPublishPlugin> {
             configure<PublishingExtension> {

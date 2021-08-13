@@ -1,5 +1,6 @@
 package com.spicymemes.artifactory
 
+import net.fabricmc.loom.task.*
 import org.gradle.api.file.*
 import org.gradle.api.tasks.*
 import org.gradle.jvm.tasks.*
@@ -12,6 +13,11 @@ internal fun AbstractCopyTask.fromOutputs(sourceSet: List<SourceSet>) =
 
 internal fun Jar.jarConfig(archiveVersion: String) {
     group = "build"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    this.archiveVersion.set(archiveVersion)
+}
+
+internal fun RemapJarTask.jarConfig(archiveVersion: String) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     this.archiveVersion.set(archiveVersion)
 }
