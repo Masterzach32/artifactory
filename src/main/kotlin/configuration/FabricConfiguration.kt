@@ -67,8 +67,8 @@ class FabricConfiguration(project: Project, commonProject: Project) : AbstractMo
         val remapJar by tasks.existing(RemapJarTask::class) {
             jarConfig(archivesVersion)
         }
-        val remapSourcesJar by tasks.existing(RemapJarTask::class) {
-            jarConfig(archivesVersion)
+        val remapSourcesJar by tasks.existing(RemapSourcesJarTask::class) {
+            jarConfig(apiSourcesJar.get())
         }
         val remapApiJar by tasks.registering(RemapJarTask::class) {
             jarConfig(archivesVersion)
@@ -76,11 +76,10 @@ class FabricConfiguration(project: Project, commonProject: Project) : AbstractMo
             group = Constants.TaskGroup.FABRIC
             input.set(apiJar.flatMap { it.archiveFile })
         }
-        val remapApiSourcesJar by tasks.registering(RemapJarTask::class) {
-            jarConfig(archivesVersion)
+        val remapApiSourcesJar by tasks.registering(RemapSourcesJarTask::class) {
+            jarConfig(apiSourcesJar.get())
             dependsOn(apiSourcesJar)
             group = Constants.TaskGroup.FABRIC
-            input.set(apiSourcesJar.flatMap { it.archiveFile })
         }
 
         project.tasks.named("assemble") {
