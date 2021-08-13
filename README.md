@@ -6,7 +6,7 @@ Artifactory is a gradle plugin to assist in developing Minecraft mods that can t
 Fabric and Forge are the only two modloaders supported. This plugin is currently in early development, expect the API 
 to remain unstable until a 1.0 release. (This means breaking changes can happen any time!)
 
-You can find the latest version on the [gradle plugin portal](https://plugins.gradle.org/plugin/com.spicymemes.artifactory).
+You can find the latest version on the [gradle plugin portal](https://plugins.gradle.org/plugin/com.github.masterzach32.artifactory).
 Snapshot versions are available in the snapshots repository: https://maven.masterzach32.net/artifactory/gradle-plugins/
 
 To accomplish this, your mod should be divided into three sub-projects: `common`, `fabric`, and `forge`. Then in each
@@ -18,7 +18,7 @@ resources, jar tasks, and publications. For example:
 ```kotlin
 plugins {
     id("fabric-loom")
-    id("com.spicymemes.artifactory")
+    id("com.github.masterzach32.artifactory")
 }
 
 artifactory.common()
@@ -28,7 +28,7 @@ artifactory.common()
 ```kotlin
 plugins {
     id("fabric-loom")
-    id("com.spicymemes.artifactory")
+    id("com.github.masterzach32.artifactory")
 }
 
 artifactory.fabric()
@@ -38,7 +38,7 @@ artifactory.fabric()
 ```kotlin
 plugins {
     id("net.minecraftforge.gradle")
-    id("com.spicymemes.artifactory")
+    id("com.github.masterzach32.artifactory")
 }
 
 artifactory.forge()
