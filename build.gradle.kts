@@ -17,13 +17,13 @@ val isSnapshot = !isRelease
 repositories {
     mavenCentral()
     maven("https://maven.minecraftforge.net")
-    maven("https://maven.fabricmc.net")
+//    maven("https://maven.fabricmc.net")
 }
 
 dependencies {
     implementation(gradleKotlinDsl())
     implementation("net.minecraftforge.gradle:ForgeGradle:5.1.+")
-    implementation("fabric-loom:fabric-loom.gradle.plugin:0.9.+")
+//    implementation("fabric-loom:fabric-loom.gradle.plugin:0.9.+")
 }
 
 tasks.withType<KotlinCompile> {
@@ -33,7 +33,7 @@ tasks.withType<KotlinCompile> {
 gradlePlugin {
     plugins {
         create(project.name) {
-            id = "com.spicymemes.artifactory"
+            id = "com.github.masterzach32.artifactory"
             displayName = "Minecraft Artifactory"
             description = "Helps configure multi-target minecraft mods. Supports fabric and forge out of the box."
             implementationClass = "com.spicymemes.artifactory.ArtifactoryPlugin"
@@ -42,7 +42,7 @@ gradlePlugin {
 }
 
 pluginBundle {
-    website = "https://github.com/Masterzach32/"
+    website = "https://github.com/Masterzach32/artifactory/"
     vcsUrl = "https://github.com/Masterzach32/artifactory/"
     tags = listOf("minecraft")
 }
@@ -53,20 +53,23 @@ tasks.publishPlugins {
 
 publishing {
     repositories {
-        if (isSnapshot) {
             val mavenUsername: String? by project
             val mavenPassword: String? by project
             if (mavenUsername != null && mavenPassword != null) {
                 maven {
-                    name = "Snapshots"
-                    url = uri("https://maven.masterzach32.net/artifactory/gradle-plugins/")
+                    if (isRelease) {
+                        name = "Release"
+                        url = uri("https://maven.masterzach32.net/artifactory/gradle-plugin-releases/")
+                    } else {
+                        name = "Snapshot"
+                        url = uri("https://maven.masterzach32.net/artifactory/gradle-plugin-snapshots/")
+                    }
                     credentials {
                         username = mavenUsername
                         password = mavenPassword
                     }
                 }
             }
-        }
     }
 }
 

@@ -1,11 +1,9 @@
 package com.spicymemes.artifactory.configuration
 
-import net.fabricmc.loom.*
 import org.gradle.api.*
 import org.gradle.api.publish.*
 import org.gradle.api.publish.maven.*
 import org.gradle.api.publish.maven.plugins.*
-import org.gradle.api.tasks.*
 import org.gradle.api.tasks.bundling.*
 import org.gradle.kotlin.dsl.*
 
