@@ -11,7 +11,7 @@ import org.gradle.api.tasks.bundling.*
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.*
 
-class FabricConfiguration(project: Project, val commonProject: Project) : AbstractModLoaderConfiguration(project) {
+class FabricConfiguration(project: Project, commonProject: Project) : AbstractModLoaderConfiguration(project) {
 
     private val commonSourceSets = commonProject.the<SourceSetContainer>()
 
@@ -20,7 +20,6 @@ class FabricConfiguration(project: Project, val commonProject: Project) : Abstra
     }
 
     override fun Project.configureSourceSets() {
-        val commonSourceSets = commonProject.the<SourceSetContainer>()
         sourceSets["api"].apply {
             commonSourceSets["api"].also { commonApi ->
                 compileClasspath += commonApi.output

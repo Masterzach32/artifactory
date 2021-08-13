@@ -52,24 +52,26 @@ tasks.publishPlugins {
 }
 
 publishing {
+
+
     repositories {
-            val mavenUsername: String? by project
-            val mavenPassword: String? by project
-            if (mavenUsername != null && mavenPassword != null) {
-                maven {
-                    if (isRelease) {
-                        name = "Release"
-                        url = uri("https://maven.masterzach32.net/artifactory/gradle-plugin-releases/")
-                    } else {
-                        name = "Snapshot"
-                        url = uri("https://maven.masterzach32.net/artifactory/gradle-plugin-snapshots/")
-                    }
-                    credentials {
-                        username = mavenUsername
-                        password = mavenPassword
-                    }
+        val mavenUsername: String? by project
+        val mavenPassword: String? by project
+        if (mavenUsername != null && mavenPassword != null) {
+            maven {
+                if (isRelease) {
+                    name = "Release"
+                    url = uri("https://maven.masterzach32.net/artifactory/gradle-plugin-releases/")
+                } else {
+                    name = "Snapshot"
+                    url = uri("https://maven.masterzach32.net/artifactory/gradle-plugin-snapshots/")
+                }
+                credentials {
+                    username = mavenUsername
+                    password = mavenPassword
                 }
             }
+        }
     }
 }
 

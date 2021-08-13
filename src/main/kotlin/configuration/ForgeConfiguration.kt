@@ -4,9 +4,7 @@ import com.spicymemes.artifactory.*
 import net.minecraftforge.gradle.userdev.*
 import net.minecraftforge.gradle.userdev.tasks.*
 import org.gradle.api.*
-import org.gradle.api.artifacts.*
 import org.gradle.api.file.*
-import org.gradle.api.plugins.*
 import org.gradle.api.publish.*
 import org.gradle.api.publish.maven.*
 import org.gradle.api.publish.maven.plugins.*
@@ -16,7 +14,7 @@ import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.*
 import java.io.*
 
-class ForgeConfiguration(project: Project, val commonProject: Project) : AbstractModLoaderConfiguration(project) {
+class ForgeConfiguration(project: Project, commonProject: Project) : AbstractModLoaderConfiguration(project) {
 
     private val commonSourceSets = commonProject.the<SourceSetContainer>()
 

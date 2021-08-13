@@ -28,6 +28,7 @@ abstract class AbstractModLoaderConfiguration(protected val project: Project) {
     protected val apiRuntimeOnly: NamedDomainObjectProvider<Configuration> by project.configurations.existing
 
     fun configure() {
+        project.beforeConfiguration()
         project.configureSourceSets()
         project.configureConfigurations()
         project.configureTasks()
