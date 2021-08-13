@@ -29,10 +29,12 @@ abstract class AbstractModLoaderConfiguration(protected val project: Project) {
 
     fun configure() {
         project.beforeConfiguration()
+
         project.configureSourceSets()
         project.configureConfigurations()
         project.configureTasks()
         project.configureArtifacts()
+
         project.afterConfiguration()
     }
 

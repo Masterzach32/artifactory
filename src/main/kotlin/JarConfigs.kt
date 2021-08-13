@@ -11,6 +11,7 @@ internal fun AbstractCopyTask.fromOutputs(sourceSet: List<SourceSet>) =
     from(*sourceSet.map { it.output }.toTypedArray())
 
 internal fun Jar.jarConfig(archiveVersion: String) {
+    group = "build"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     this.archiveVersion.set(archiveVersion)
 }

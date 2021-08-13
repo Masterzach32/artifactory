@@ -1,6 +1,8 @@
 package com.spicymemes.artifactory.configuration
 
 import com.spicymemes.artifactory.*
+import net.fabricmc.loom.task.*
+import net.fabricmc.loom.util.*
 import org.gradle.api.*
 import org.gradle.api.file.*
 import org.gradle.api.publish.*
@@ -66,14 +68,20 @@ class FabricConfiguration(project: Project, commonProject: Project) : AbstractMo
 
         val remapJar by tasks.existing
         val remapSourcesJar by tasks.existing
+        val remapApiJar by tasks.registering(RemapJarTask::class) {
+            group = Constants.TaskGroup.FABRIC
+            input.set(apiJar.flatMap { it.archiveFile })
+        }
+        val remapApiSourcesJar by tasks.registering(RemapJarTask::class) {
+            group = Constants.TaskGroup.FABRIC
+            input.set(apiSourcesJar.flatMap { it.archiveFile })
+        }
         plugins.withType<MavenPublishPlugin> {
             configure<PublishingExtension> {
                 publications {
                     named<MavenPublication>("mod") {
                         artifactId = archivesBaseName
-                        artifact(remapJar) {
-                            builtBy(remapJar)
-                        }
+                        artifact(remapJar)
                         artifact(sourcesJar) {
                             builtBy(remapSourcesJar)
                         }
@@ -81,10 +89,10 @@ class FabricConfiguration(project: Project, commonProject: Project) : AbstractMo
                     named<MavenPublication>("api") {
                         artifactId = apiArchivesBaseName
                         artifact(apiJar) {
-                            builtBy(remapJar)
+                            builtBy(remapApiJar)
                         }
                         artifact(apiSourcesJar) {
-                            builtBy(remapSourcesJar)
+                            builtBy(remapApiSourcesJar)
                         }
                     }
                 }

@@ -12,7 +12,8 @@ Snapshot versions are available in the snapshots repository: https://maven.maste
 To accomplish this, your mod should be divided into three sub-projects: `common`, `fabric`, and `forge`. Then in each
 `build.gradle.kts` file, apply the plugin after each modloader's respective plugin. Artifactory then automatically sets 
 up your `fabric` and `forge` projects to depend on the `common` project's source, and automatically configures the 
-resources, jar tasks, and publications. For example:
+resources, jar tasks, and publications. If you don't want to follow this project layout, you can specify each projects'
+target like below:
 
 `/common/build.gradle.kts`:
 ```kotlin
