@@ -75,6 +75,7 @@ class FabricConfiguration(project: Project, commonProject: Project) : AbstractMo
             dependsOn(apiJar)
             group = Constants.TaskGroup.FABRIC
             input.set(apiJar.flatMap { it.archiveFile })
+            addNestedDependencies.set(true)
         }
         val remapApiSourcesJar by tasks.registering(RemapSourcesJarTask::class) {
             jarConfig(apiSourcesJar.get())

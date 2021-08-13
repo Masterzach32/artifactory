@@ -35,6 +35,7 @@ class CommonConfiguration(project: Project) : AbstractModLoaderConfiguration(pro
             dependsOn(apiJar)
             group = Constants.TaskGroup.FABRIC
             input.set(apiJar.flatMap { it.archiveFile })
+            addNestedDependencies.set(true)
         }
         val remapApiSourcesJar by tasks.registering(RemapSourcesJarTask::class) {
             jarConfig(apiSourcesJar.get())
