@@ -1,5 +1,6 @@
 package com.spicymemes.artifactory
 
+import com.spicymemes.artifactory.configuration.*
 import org.gradle.api.*
 import org.gradle.api.artifacts.*
 import org.gradle.api.plugins.*
@@ -14,7 +15,16 @@ class ArtifactoryPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         project.plugins.apply(JavaPlugin::class)
-        val sourceSets = project.extensions.getByType<SourceSetContainer>()
+
+        val mcVersion: String? = project.the<VersionCatalog>().findVersion("minecraft").orElse(null)?.requiredVersion
+            ?: project.findProperty("mcVersion")?.toString()
+            ?: project.findProperty("minecraftVersion")?.toString()
+        val archivesVersion: String = if (mcVersion != null)
+            "$mcVersion-${project.version}"
+        else
+            "${project.version}"
+
+        val sourceSets = project.the<SourceSetContainer>()
 
         val apiSourceSet = sourceSets.create("api")
         sourceSets["main"].apply {
@@ -26,33 +36,11 @@ class ArtifactoryPlugin : Plugin<Project> {
             runtimeClasspath += apiSourceSet.output
         }
 
-        if (project.name == "forge") {
-            project.configurations.register("library").also { library ->
-                project.configurations.named("implementation") {
-                    extendsFrom(library.get())
-                }
-            }
-        }
-
         val archivesBaseName: String = project.findProperty("archivesBaseName")?.toString()
             ?: project.findProperty("archivesName")?.toString()
             ?: project.findProperty("modId")?.toString()
             ?: project.name
         project.the<BasePluginExtension>().archivesName.set(archivesBaseName)
-
-        val mcVersion: String? = project.the<VersionCatalog>().findVersion("minecraft").orElse(null)?.requiredVersion
-            ?: project.findProperty("mcVersion")?.toString()
-            ?: project.findProperty("minecraftVersion")?.toString()
-        val archivesVersion: String = if (mcVersion != null)
-            "$mcVersion-${project.version}"
-        else
-            "${project.version}"
-
-        project.extensions.create<ArtifactoryExtension>(
-            "artifactory",
-            project,
-            archivesVersion,
-        )
 
         val jar by project.tasks.existing(Jar::class) {
             jarConfig(archivesVersion)
@@ -92,5 +80,40 @@ class ArtifactoryPlugin : Plugin<Project> {
                 }
             }
         }
+
+        if (project.name == "forge") {
+            project.configurations.register("library").also { library ->
+                project.configurations.named("implementation") {
+                    extendsFrom(library.get())
+                }
+            }
+        }
+
+        val commonProject: Project? = project.rootProject.subprojects.firstOrNull {
+            it.name == "common" || it.the<ArtifactoryExtension>().configuration is CommonConfiguration
+        }
+
+        val projectConfig: AbstractModLoaderConfiguration = when (project.name) {
+            "common" -> CommonConfiguration(project)
+            "fabric" -> commonProject?.let { FabricConfiguration(project, it) }
+                ?: error(
+                    "Cannot setup named configuration for fabric project, because the common project " +
+                        "configuration could not be located."
+                )
+            "forge" -> commonProject?.let { ForgeConfiguration(project, it) }
+                ?: error(
+                    "Cannot setup named configuration for forge project, because the common project " +
+                        "configuration could not be located."
+                )
+            else -> UnknownConfiguration(project)
+        }
+
+        projectConfig.configure()
+
+        project.extensions.create<ArtifactoryExtension>(
+            "artifactory",
+            project,
+            projectConfig
+        )
     }
 }
