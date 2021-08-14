@@ -91,11 +91,11 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
             from(sourceSets["api"].output)
         }
 
-        project.tasks.named("assemble") {
+        tasks.named("assemble") {
             dependsOn(deobfJar, apiDeobfJar)
         }
 
-        project.extensions.configure<NamedDomainObjectContainer<RenameJarInPlace>>("reobf") {
+        extensions.configure<NamedDomainObjectContainer<RenameJarInPlace>>("reobf") {
             create("apiJar") {
                 classpath.from(sourceSets["api"].compileClasspath)
             }
@@ -104,8 +104,8 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
             }
         }
 
-        project.plugins.withType<MavenPublishPlugin> {
-            project.configure<PublishingExtension> {
+        plugins.withType<MavenPublishPlugin> {
+            configure<PublishingExtension> {
                 publications {
                     named<MavenPublication>("mod") {
                         artifactId = archivesBaseName
@@ -126,6 +126,11 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
 
     override fun Project.afterConfiguration() {
         extensions.create<ForgeExtension>("forge", this)
+
+        configurations.register("forgeRuntimeMod") {
+            description = ""
+            isCanBeConsumed = false
+        }
     }
 
     open class ForgeExtension(private val project: Project) {
@@ -133,10 +138,31 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
         fun applyForgeMissingLibsTempfix() {
             project.the<UserDevExtension>().runs.all {
                 lazyToken("minecraft_classpath") {
-                    project.configurations["library"]
-                        .copyRecursive()
+                    project.configurations["runtimeClasspath"]
+                        .copyRecursive { !(it.group == "net.minecraftforge" && it.name == "forge") }
                         .resolve()
                         .joinToString(File.pathSeparator) { it.absolutePath }
+                }
+            }
+        }
+
+        fun applyInvalidModuleNameFix() {
+            project.afterEvaluate {
+                gradle.projectsEvaluated {
+                    the<UserDevExtension>().runs.all {
+                        val copyRuntimeMods = tasks.register("copy${name.capitalize()}RuntimeMods", Copy::class) {
+                            val modsDir = "$workingDirectory/mods"
+                            doFirst {
+                                file(modsDir).deleteRecursively()
+                                mkdir(modsDir)
+                            }
+                            from(configurations["forgeRuntimeMod"].copy().resolve())
+                            into(modsDir)
+                        }
+                        tasks.named("prepareRun${name.capitalize()}") {
+                            finalizedBy(copyRuntimeMods)
+                        }
+                    }
                 }
             }
         }

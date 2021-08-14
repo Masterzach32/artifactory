@@ -81,14 +81,6 @@ class ArtifactoryPlugin : Plugin<Project> {
             }
         }
 
-        if (project.name == "forge") {
-            project.configurations.register("library").also { library ->
-                project.configurations.named("implementation") {
-                    extendsFrom(library.get())
-                }
-            }
-        }
-
         val commonProject: Project? = project.rootProject.subprojects.firstOrNull {
             it.name == "common" || it.the<ArtifactoryExtension>().configuration is CommonConfiguration
         }

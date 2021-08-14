@@ -1,5 +1,7 @@
 # Artifactory
 
+[![Gradle plugin portal version](https://img.shields.io/gradle-plugin-portal/v/com.github.masterzach32.artifactory?style=for-the-badge)]()
+[![Gradle plugin portal version](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fmaven.masterzach32.net%2Fartifactory%2Fgradle-plugins%2Fcom%2Fgithub%2Fmasterzach32%2Fartifactory%2Fcom.github.masterzach32.artifactory.gradle.plugin%2Fmaven-metadata.xml&style=for-the-badge)]()
 [![GitHub workflow status](https://img.shields.io/github/workflow/status/Masterzach32/artifactory/Java%20CI/master?style=for-the-badge)]()
 
 Artifactory is a gradle plugin to assist in developing Minecraft mods that can target different modloaders. Currently,
