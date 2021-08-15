@@ -19,10 +19,11 @@ class ArtifactoryPlugin : Plugin<Project> {
         val mcVersion: String? = project.the<VersionCatalog>().findVersion("minecraft").orElse(null)?.requiredVersion
             ?: project.findProperty("mcVersion")?.toString()
             ?: project.findProperty("minecraftVersion")?.toString()
-        val archivesVersion: String = if (mcVersion != null)
-            "$mcVersion-${project.version}"
-        else
-            "${project.version}"
+        val archivesVersion: String = project.rootProject.the<ExtraPropertiesExtension>().get("archivesVersion")?.toString() ?:
+            if (mcVersion != null)
+                "$mcVersion-${project.version}"
+            else
+                "${project.version}"
 
         val sourceSets = project.the<SourceSetContainer>()
 
@@ -50,18 +51,18 @@ class ArtifactoryPlugin : Plugin<Project> {
         val sourcesJar by project.tasks.registering(Jar::class) {
             jarConfig(archivesVersion)
             archiveClassifier.set("sources")
-            fromSources(sourceSets.modSets)
+            sourceSets.modSets.forEach {
+                from(it.allSource)
+            }
         }
 
         val apiJar by project.tasks.registering(Jar::class) {
             jarConfig(archivesVersion)
-            from(sourceSets["api"].output)
         }
 
         val apiSourcesJar by project.tasks.registering(Jar::class) {
             jarConfig(archivesVersion)
             archiveClassifier.set("sources")
-            from(sourceSets["api"].allSource)
         }
 
         project.tasks.named("assemble") {

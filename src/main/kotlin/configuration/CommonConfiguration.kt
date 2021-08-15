@@ -1,8 +1,6 @@
 package com.spicymemes.artifactory.configuration
 
-import com.spicymemes.artifactory.*
 import net.fabricmc.loom.task.*
-import net.fabricmc.loom.util.*
 import org.gradle.api.*
 import org.gradle.api.publish.*
 import org.gradle.api.publish.maven.*
@@ -17,47 +15,40 @@ class CommonConfiguration(project: Project) : AbstractModLoaderConfiguration(pro
     }
 
     override fun Project.configureTasks() {
-        val apiJar by tasks.existing(Jar::class) {
-            archiveBaseName.set(apiArchivesBaseName)
-        }
-        val apiSourcesJar by tasks.existing(Jar::class) {
-            archiveBaseName.set(apiArchivesBaseName)
-        }
-
         val remapJar by tasks.existing(RemapJarTask::class) {
-            jarConfig(archivesVersion)
+            archiveVersion.set(archivesVersion)
         }
-        val remapSourcesJar by tasks.existing(RemapSourcesJarTask::class) {
-            jarConfig(apiSourcesJar.get())
-        }
-        val remapApiJar by tasks.registering(RemapJarTask::class) {
-            jarConfig(archivesVersion)
-            dependsOn(apiJar)
-            group = Constants.TaskGroup.FABRIC
-            input.set(apiJar.flatMap { it.archiveFile })
-            addNestedDependencies.set(true)
-        }
-        val remapApiSourcesJar by tasks.registering(RemapSourcesJarTask::class) {
-            jarConfig(apiSourcesJar.get())
-            dependsOn(apiSourcesJar)
-            group = Constants.TaskGroup.FABRIC
+        val remapSourcesJar by tasks.existing(RemapSourcesJarTask::class)
+
+        val apiJar by tasks.existing(Jar::class)
+        val apiSourcesJar by tasks.existing(Jar::class)
+        project.afterEvaluate {
+            apiJar {
+                val remapJar = remapJar.get()
+                dependsOn(remapJar)
+                archiveBaseName.set(apiArchivesBaseName)
+                from(zipTree(remapJar.archiveFile)) {
+                    include("**/api/**")
+                }
+            }
+
+            apiSourcesJar {
+                val remapSourcesJar = remapSourcesJar.get()
+                dependsOn(remapSourcesJar)
+                archiveBaseName.set(apiArchivesBaseName)
+                from(zipTree(remapSourcesJar.output)) {
+                    include("**/api/**")
+                }
+            }
         }
 
-        project.tasks.named("assemble") {
-            dependsOn(remapApiJar, remapApiSourcesJar)
-        }
-
-        project.plugins.withType<MavenPublishPlugin> {
-            project.configure<PublishingExtension> {
+        plugins.withType<MavenPublishPlugin> {
+            configure<PublishingExtension> {
                 publications {
                     named<MavenPublication>("api") {
                         artifactId = apiArchivesBaseName
-                        artifact(apiJar) {
-                            builtBy(remapJar)
-                        }
-                        artifact(apiSourcesJar) {
-                            builtBy(remapSourcesJar)
-                        }
+                        artifact(apiJar)
+                        artifact(apiSourcesJar)
                     }
 
                     remove(getByName("mod"))

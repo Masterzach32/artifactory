@@ -19,6 +19,8 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
     private val commonSourceSets = commonProject.the<SourceSetContainer>()
 
     override fun Project.beforeConfiguration() {
+        archivesBaseName += "-forge"
+
         repositories {
             maven("https://maven.minecraftforge.net")
         }
@@ -55,30 +57,40 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
         }
 
         val jar by project.tasks.existing(Jar::class) {
-            fromOutputs(commonSourceSets.modSets)
+            commonSourceSets.modSets.forEach {
+                from(it.output)
+            }
             finalizedBy("reobfJar")
         }
 
         val sourcesJar by project.tasks.existing(Jar::class) {
-            fromSources(commonSourceSets.modSets)
+            commonSourceSets.modSets.forEach {
+                from(it.allSource)
+            }
         }
 
         val deobfJar by project.tasks.registering(Jar::class) {
             jarConfig(archivesVersion)
             archiveClassifier.set("deobf")
-            fromOutputs(commonSourceSets.modSets)
-            fromOutputs(sourceSets.modSets)
+            commonSourceSets.modSets.forEach {
+                from(it.output)
+            }
+            sourceSets.modSets.forEach {
+                from(it.output)
+            }
         }
 
         val apiJar by project.tasks.existing(Jar::class) {
             archiveBaseName.set(apiArchivesBaseName)
             from(commonSourceSets["api"].output)
+            from(sourceSets["api"].output)
             finalizedBy("reobfApiJar")
         }
 
         val apiSourcesJar by project.tasks.existing(Jar::class) {
             archiveBaseName.set(apiArchivesBaseName)
             from(commonSourceSets["api"].allSource)
+            from(sourceSets["api"].allSource)
         }
 
         val apiDeobfJar by project.tasks.registering(Jar::class) {

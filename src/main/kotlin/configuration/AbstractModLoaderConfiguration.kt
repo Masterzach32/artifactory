@@ -8,7 +8,7 @@ import org.gradle.kotlin.dsl.*
 
 abstract class AbstractModLoaderConfiguration(protected val project: Project) {
 
-    val archivesBaseName: String by project.extensions.getByType<BasePluginExtension>().archivesName
+    var archivesBaseName: String by project.extensions.getByType<BasePluginExtension>().archivesName
     val apiArchivesBaseName: String
         get() = "$archivesBaseName-api"
 
