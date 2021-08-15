@@ -19,9 +19,7 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
     private val commonSourceSets = commonProject.the<SourceSetContainer>()
 
     override fun Project.beforeConfiguration() {
-        archivesBaseName += "-forge"
-
-        project.repositories {
+        repositories {
             maven("https://maven.minecraftforge.net")
         }
     }

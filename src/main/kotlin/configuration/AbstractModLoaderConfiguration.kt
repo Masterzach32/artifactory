@@ -8,8 +8,7 @@ import org.gradle.kotlin.dsl.*
 
 abstract class AbstractModLoaderConfiguration(protected val project: Project) {
 
-    var archivesBaseName: String by project.extensions.getByType<BasePluginExtension>().archivesName
-        protected set
+    val archivesBaseName: String by project.extensions.getByType<BasePluginExtension>().archivesName
     val apiArchivesBaseName: String
         get() = "$archivesBaseName-api"
 
@@ -17,10 +16,11 @@ abstract class AbstractModLoaderConfiguration(protected val project: Project) {
         ?: project.findProperty("mcVersion")?.toString()
         ?: project.findProperty("minecraftVersion")?.toString()
 
-    val archivesVersion: String = if (mcVersion != null)
-        "$mcVersion-${project.version}"
-    else
-        "${project.version}"
+    val archivesVersion: String = project.rootProject.the<ExtraPropertiesExtension>().get("archivesVersion")?.toString() ?:
+        if (mcVersion != null)
+            "$mcVersion-${project.version}"
+        else
+            "${project.version}"
 
     protected val sourceSets = project.the<SourceSetContainer>()
 

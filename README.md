@@ -1,8 +1,8 @@
 # Artifactory
 
-[![Gradle plugin portal version](https://img.shields.io/gradle-plugin-portal/v/com.github.masterzach32.artifactory?style=for-the-badge)]()
-[![Gradle plugin portal version](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fmaven.masterzach32.net%2Fartifactory%2Fgradle-plugins%2Fcom%2Fgithub%2Fmasterzach32%2Fartifactory%2Fcom.github.masterzach32.artifactory.gradle.plugin%2Fmaven-metadata.xml&style=for-the-badge)]()
-[![GitHub workflow status](https://img.shields.io/github/workflow/status/Masterzach32/artifactory/Java%20CI/master?style=for-the-badge)]()
+[![Gradle plugin portal version](https://img.shields.io/gradle-plugin-portal/v/com.github.masterzach32.artifactory?style=for-the-badge)](https://plugins.gradle.org/plugin/com.github.masterzach32.artifactory)
+[![Published maven version](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fmaven.masterzach32.net%2Fartifactory%2Fgradle-plugins%2Fcom%2Fgithub%2Fmasterzach32%2Fartifactory%2Fcom.github.masterzach32.artifactory.gradle.plugin%2Fmaven-metadata.xml&style=for-the-badge)](https://maven.masterzach32.net/artifactory/gradle-plugins/com/github/masterzach32/artifactory/com.github.masterzach32.artifactory.gradle.plugin)
+[![GitHub workflow status](https://img.shields.io/github/workflow/status/Masterzach32/artifactory/Java%20CI/master?style=for-the-badge)](https://github.com/Masterzach32/artifactory/actions)
 
 Artifactory is a gradle plugin to assist in developing Minecraft mods that can target different modloaders. Currently,
 Fabric and Forge are the only two modloaders supported. This plugin is currently in early development, expect the API 

@@ -17,10 +17,6 @@ class FabricConfiguration(project: Project, commonProject: Project) : AbstractMo
 
     private val commonSourceSets = commonProject.the<SourceSetContainer>()
 
-    override fun Project.beforeConfiguration() {
-        archivesBaseName += "-fabric"
-    }
-
     override fun Project.configureSourceSets() {
         sourceSets["api"].apply {
             commonSourceSets["api"].also { commonApi ->
