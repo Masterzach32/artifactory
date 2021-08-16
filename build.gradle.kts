@@ -18,12 +18,13 @@ repositories {
     mavenCentral()
     maven("https://maven.minecraftforge.net")
     maven("https://maven.fabricmc.net")
+    mavenLocal()
 }
 
 dependencies {
     implementation(gradleKotlinDsl())
-    implementation("net.minecraftforge.gradle:ForgeGradle:5.1.+")
-    implementation("fabric-loom:fabric-loom.gradle.plugin:0.9.+")
+    compileOnly("net.minecraftforge.gradle:ForgeGradle:5.1.+")
+    compileOnly("fabric-loom:fabric-loom.gradle.plugin:0.9.+")
 }
 
 tasks.withType<KotlinCompile> {

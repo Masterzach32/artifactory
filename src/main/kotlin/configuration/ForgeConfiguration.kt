@@ -1,6 +1,7 @@
 package com.spicymemes.artifactory.configuration
 
 import com.spicymemes.artifactory.*
+import com.spicymemes.artifactory.configuration.forge.*
 import net.minecraftforge.gradle.userdev.*
 import net.minecraftforge.gradle.userdev.tasks.*
 import org.gradle.api.*
@@ -40,6 +41,24 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
     }
 
     override fun Project.configureConfigurations() {
+        ForgeMappedConfigurationEntry.allEntries.forEach {
+            configurations.register(it.sourceConfigurationName) {
+                description = "Configuration to hold obfuscated dependencies for the ${it.targetConfigurationName} configuration."
+                isCanBeResolved = false
+                dependencies.all {
+                    project.dependencies.add(it.mappedConfigurationName, the<DependencyManagementExtension>().deobf(this))
+                }
+            }
+            val mappedConfiguration = configurations.register(it.mappedConfigurationName) {
+                description = "Configuration to hold deobfuscated dependencies for the ${it.targetConfigurationName} configuration."
+                isCanBeResolved = false
+                isTransitive = false
+            }
+            configurations.named(it.targetConfigurationName) {
+                extendsFrom(mappedConfiguration.get())
+            }
+        }
+
         apiImplementation {
             extendsFrom(project.configurations["implementation"])
         }
@@ -136,11 +155,6 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
 
     override fun Project.afterConfiguration() {
         extensions.create<ForgeExtension>("forge", this)
-
-        configurations.register("forgeRuntimeMod") {
-            description = ""
-            isCanBeConsumed = false
-        }
     }
 
     open class ForgeExtension(private val project: Project) {
@@ -152,11 +166,21 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
                         .copyRecursive { !(it.group == "net.minecraftforge" && it.name == "forge") }
                         .resolve()
                         .joinToString(File.pathSeparator) { it.absolutePath }
+                        .also { project.logger.lifecycle("Applying fix for minecraft_classpath: $it") }
                 }
             }
         }
 
         fun applyInvalidModuleNameFix() {
+            project.configurations["runtimeOnly"].apply {
+                setExtendsFrom(extendsFrom.filter { it.name != ForgeMappedConfigurationEntry.runtimeOnly.mappedConfigurationName })
+            }
+
+            val modRuntimeModFiles by project.configurations.registering {
+                extendsFrom(project.configurations[ForgeMappedConfigurationEntry.runtimeOnly.mappedConfigurationName])
+                isCanBeConsumed = false
+            }
+
             project.afterEvaluate {
                 gradle.projectsEvaluated {
                     the<UserDevExtension>().runs.all {
@@ -166,7 +190,7 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
                                 file(modsDir).deleteRecursively()
                                 mkdir(modsDir)
                             }
-                            from(configurations["forgeRuntimeMod"].copy().resolve())
+                            from(modRuntimeModFiles.get().resolve())
                             into(modsDir)
                         }
                         tasks.named("prepareRun${name.capitalize()}") {
