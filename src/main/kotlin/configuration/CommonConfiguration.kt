@@ -8,50 +8,50 @@ import org.gradle.api.publish.maven.plugins.*
 import org.gradle.api.tasks.bundling.*
 import org.gradle.kotlin.dsl.*
 
-class CommonConfiguration(project: Project) : AbstractModLoaderConfiguration(project) {
+class CommonConfiguration(project: Project) : BaseConfiguration(project) {
 
-    override fun Project.configureConfigurations() {
-        configurations["apiImplementation"].extendsFrom(configurations["compileClasspath"])
-    }
+    init {
+        configureProject {
+            configurations["apiImplementation"].extendsFrom(configurations["compileClasspath"])
 
-    override fun Project.configureTasks() {
-        val remapJar by tasks.existing(RemapJarTask::class) {
-            archiveVersion.set(archivesVersion)
-        }
-        val remapSourcesJar by tasks.existing(RemapSourcesJarTask::class)
-
-        val apiJar by tasks.existing(Jar::class)
-        val apiSourcesJar by tasks.existing(Jar::class)
-        project.afterEvaluate {
-            apiJar {
-                val remapJar = remapJar.get()
-                dependsOn(remapJar)
-                archiveBaseName.set(apiArchivesBaseName)
-                from(zipTree(remapJar.archiveFile)) {
-                    include("**/api/**")
-                }
+            val remapJar by tasks.existing(RemapJarTask::class) {
+                archiveVersion.set(archivesVersion)
             }
+            val remapSourcesJar by tasks.existing(RemapSourcesJarTask::class)
 
-            apiSourcesJar {
-                val remapSourcesJar = remapSourcesJar.get()
-                dependsOn(remapSourcesJar)
-                archiveBaseName.set(apiArchivesBaseName)
-                from(zipTree(remapSourcesJar.output)) {
-                    include("**/api/**")
-                }
-            }
-        }
-
-        plugins.withType<MavenPublishPlugin> {
-            configure<PublishingExtension> {
-                publications {
-                    named<MavenPublication>("api") {
-                        artifactId = apiArchivesBaseName
-                        artifact(apiJar)
-                        artifact(apiSourcesJar)
+            val apiJar by tasks.existing(Jar::class)
+            val apiSourcesJar by tasks.existing(Jar::class)
+            project.afterEvaluate {
+                apiJar {
+                    val remapJar = remapJar.get()
+                    dependsOn(remapJar)
+                    archiveBaseName.set(apiArchivesBaseName)
+                    from(zipTree(remapJar.archiveFile)) {
+                        include("**/api/**")
                     }
+                }
 
-                    remove(getByName("mod"))
+                apiSourcesJar {
+                    val remapSourcesJar = remapSourcesJar.get()
+                    dependsOn(remapSourcesJar)
+                    archiveBaseName.set(apiArchivesBaseName)
+                    from(zipTree(remapSourcesJar.output)) {
+                        include("**/api/**")
+                    }
+                }
+            }
+
+            plugins.withType<MavenPublishPlugin> {
+                configure<PublishingExtension> {
+                    publications {
+                        named<MavenPublication>("api") {
+                            artifactId = apiArchivesBaseName
+                            artifact(apiJar)
+                            artifact(apiSourcesJar)
+                        }
+
+                        remove(getByName("mod"))
+                    }
                 }
             }
         }

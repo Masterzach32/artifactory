@@ -15,145 +15,144 @@ import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.*
 import java.io.*
 
-class ForgeConfiguration(project: Project, commonProject: Project) : AbstractModLoaderConfiguration(project) {
+class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfiguration(project) {
 
     private val commonSourceSets = commonProject.the<SourceSetContainer>()
 
-    override fun Project.beforeConfiguration() {
-        archivesBaseName += "-forge"
-
-        repositories {
-            maven("https://maven.minecraftforge.net")
+    init {
+        beforeConfiguration {
+            archivesBaseName += "-forge"
         }
-    }
 
-    override fun Project.configureSourceSets() {
-        sourceSets["api"].apply {
-            commonSourceSets["api"].also { commonApi ->
-                compileClasspath += commonApi.output
+        configureProject {
+            sourceSets["api"].apply {
+                commonSourceSets["api"].also { commonApi ->
+                    compileClasspath += commonApi.output
+                }
             }
-        }
-        sourceSets["main"].apply {
-            commonSourceSets.filter { it.name != "test" }.forEach { sourceSet ->
-                compileClasspath += sourceSet.output
+            sourceSets["main"].apply {
+                commonSourceSets.filter { it.name != "test" }.forEach { sourceSet ->
+                    compileClasspath += sourceSet.output
+                }
+                resources.srcDir("src/generated/resources")
             }
-        }
-    }
 
-    override fun Project.configureConfigurations() {
-        val fg = the<DependencyManagementExtension>()
-        ForgeMappedConfigurationEntry.allEntries.forEach {
-            configurations.register(it.sourceConfigurationName) {
-                description = "Configuration to hold obfuscated dependencies for the ${it.targetConfigurationName} configuration."
-                isCanBeResolved = false
-                dependencies.all { project.dependencies.add(it.mappedConfigurationName, fg.deobf(this)) }
+            val fg = the<DependencyManagementExtension>()
+            ForgeMappedConfigurationEntry.allEntries.forEach {
+                configurations.register(it.sourceConfigurationName) {
+                    description = "Configuration to hold obfuscated dependencies for the ${it.targetConfigurationName} configuration."
+                    isCanBeResolved = false
+                    dependencies.all { project.dependencies.add(it.mappedConfigurationName, fg.deobf(this)) }
+                }
+                val mappedConfiguration = configurations.register(it.mappedConfigurationName) {
+                    description = "Configuration to hold deobfuscated dependencies for the ${it.targetConfigurationName} configuration."
+                    isCanBeResolved = false
+                    isTransitive = false
+                }
+                configurations.named(it.targetConfigurationName) {
+                    extendsFrom(mappedConfiguration.get())
+                }
             }
-            val mappedConfiguration = configurations.register(it.mappedConfigurationName) {
-                description = "Configuration to hold deobfuscated dependencies for the ${it.targetConfigurationName} configuration."
-                isCanBeResolved = false
-                isTransitive = false
+
+            configurations.named("apiImplementation") {
+                extendsFrom(project.configurations["implementation"])
             }
-            configurations.named(it.targetConfigurationName) {
-                extendsFrom(mappedConfiguration.get())
+            configurations.named("apiRuntimeOnly") {
+                extendsFrom(project.configurations["runtimeOnly"])
             }
-        }
 
-        apiImplementation {
-            extendsFrom(project.configurations["implementation"])
-        }
-        apiRuntimeOnly {
-            extendsFrom(project.configurations["runtimeOnly"])
-        }
-    }
-
-    override fun Project.configureTasks() {
-        project.tasks.named<ProcessResources>("processResources") {
-            duplicatesStrategy = DuplicatesStrategy.FAIL
-            inputs.property("version", project.version)
-            filesMatching("META-INF/mods.toml") { expand("version" to project.version) }
-            from(commonSourceSets["main"].resources)
-        }
-
-        val jar by project.tasks.existing(Jar::class) {
-            commonSourceSets.modSets.forEach {
-                from(it.output)
+            project.tasks.named<ProcessResources>("processResources") {
+                duplicatesStrategy = DuplicatesStrategy.FAIL
+                inputs.property("version", project.version)
+                filesMatching("META-INF/mods.toml") { expand("version" to project.version) }
+                from(commonSourceSets["main"].resources)
             }
-            finalizedBy("reobfJar")
-        }
 
-        val sourcesJar by project.tasks.existing(Jar::class) {
-            commonSourceSets.modSets.forEach {
-                from(it.allSource)
+            val jar by project.tasks.existing(Jar::class) {
+                commonSourceSets.modSets.forEach {
+                    from(it.output)
+                }
+                finalizedBy("reobfJar")
             }
-        }
 
-        val deobfJar by project.tasks.registering(Jar::class) {
-            jarConfig(archivesVersion)
-            archiveClassifier.set("deobf")
-            commonSourceSets.modSets.forEach {
-                from(it.output)
+            val sourcesJar by project.tasks.existing(Jar::class) {
+                commonSourceSets.modSets.forEach {
+                    from(it.allSource)
+                }
             }
-            sourceSets.modSets.forEach {
-                from(it.output)
+
+            val deobfJar by project.tasks.registering(Jar::class) {
+                jarConfig(archivesVersion)
+                archiveClassifier.set("deobf")
+                commonSourceSets.modSets.forEach {
+                    from(it.output)
+                }
+                sourceSets.modSets.forEach {
+                    from(it.output)
+                }
             }
-        }
 
-        val apiJar by project.tasks.existing(Jar::class) {
-            archiveBaseName.set(apiArchivesBaseName)
-            from(commonSourceSets["api"].output)
-            from(sourceSets["api"].output)
-            finalizedBy("reobfApiJar")
-        }
-
-        val apiSourcesJar by project.tasks.existing(Jar::class) {
-            archiveBaseName.set(apiArchivesBaseName)
-            from(commonSourceSets["api"].allSource)
-            from(sourceSets["api"].allSource)
-        }
-
-        val apiDeobfJar by project.tasks.registering(Jar::class) {
-            jarConfig(archivesVersion)
-            archiveBaseName.set(apiArchivesBaseName)
-            archiveClassifier.set("deobf")
-            from(commonSourceSets["api"].output)
-            from(sourceSets["api"].output)
-        }
-
-        tasks.named("assemble") {
-            dependsOn(deobfJar, apiDeobfJar)
-        }
-
-        extensions.configure<NamedDomainObjectContainer<RenameJarInPlace>>("reobf") {
-            create("apiJar") {
-                classpath.from(sourceSets["api"].compileClasspath)
+            val apiJar by project.tasks.existing(Jar::class) {
+                archiveBaseName.set(apiArchivesBaseName)
+                from(commonSourceSets["api"].output)
+                from(sourceSets["api"].output)
+                finalizedBy("reobfApiJar")
             }
-            create("jar") {
-                classpath.from(sourceSets["main"].compileClasspath)
-            }
-        }
 
-        plugins.withType<MavenPublishPlugin> {
-            configure<PublishingExtension> {
-                publications {
-                    named<MavenPublication>("mod") {
-                        artifactId = archivesBaseName
-                        artifact(jar)
-                        artifact(sourcesJar)
-                        artifact(deobfJar)
-                    }
-                    named<MavenPublication>("api") {
-                        artifactId = apiArchivesBaseName
-                        artifact(apiJar)
-                        artifact(apiSourcesJar)
-                        artifact(apiDeobfJar)
+            val apiSourcesJar by project.tasks.existing(Jar::class) {
+                archiveBaseName.set(apiArchivesBaseName)
+                from(commonSourceSets["api"].allSource)
+                from(sourceSets["api"].allSource)
+            }
+
+            val apiDeobfJar by project.tasks.registering(Jar::class) {
+                jarConfig(archivesVersion)
+                archiveBaseName.set(apiArchivesBaseName)
+                archiveClassifier.set("deobf")
+                from(commonSourceSets["api"].output)
+                from(sourceSets["api"].output)
+            }
+
+            tasks.named("assemble") {
+                dependsOn(deobfJar, apiDeobfJar)
+            }
+
+            extensions.configure<NamedDomainObjectContainer<RenameJarInPlace>>("reobf") {
+                create("apiJar") {
+                    classpath.from(sourceSets["api"].compileClasspath)
+                }
+                create("jar") {
+                    classpath.from(sourceSets["main"].compileClasspath)
+                }
+            }
+
+            plugins.withType<MavenPublishPlugin> {
+                configure<PublishingExtension> {
+                    publications {
+                        named<MavenPublication>("mod") {
+                            artifactId = archivesBaseName
+                            artifact(jar)
+                            artifact(sourcesJar)
+                            artifact(deobfJar)
+                        }
+                        named<MavenPublication>("api") {
+                            artifactId = apiArchivesBaseName
+                            artifact(apiJar)
+                            artifact(apiSourcesJar)
+                            artifact(apiDeobfJar)
+                        }
                     }
                 }
             }
         }
-    }
 
-    override fun Project.afterConfiguration() {
-        extensions.create<ForgeExtension>("forge", this)
+        afterConfiguration {
+            extensions.create<ForgeExtension>("forge", this)
+
+            repositories {
+                maven("https://maven.minecraftforge.net")
+            }
+        }
     }
 
     open class ForgeExtension(private val project: Project) {
@@ -165,7 +164,6 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
                         .copyRecursive { !(it.group == "net.minecraftforge" && it.name == "forge") }
                         .resolve()
                         .joinToString(File.pathSeparator) { it.absolutePath }
-                        .also { project.logger.lifecycle("Applying fix for minecraft_classpath: $it") }
                 }
             }
         }

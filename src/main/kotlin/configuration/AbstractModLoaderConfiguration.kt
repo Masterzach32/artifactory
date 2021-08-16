@@ -24,29 +24,25 @@ abstract class AbstractModLoaderConfiguration(protected val project: Project) {
 
     protected val sourceSets = project.the<SourceSetContainer>()
 
-    protected val apiImplementation: NamedDomainObjectProvider<Configuration> by project.configurations.existing
-    protected val apiRuntimeOnly: NamedDomainObjectProvider<Configuration> by project.configurations.existing
+    private val beforeConfigurationListeners: MutableList<Action<Project>> = mutableListOf()
+    private val configurationListeners: MutableList<Action<Project>> = mutableListOf()
+    private val afterConfigurationListeners: MutableList<Action<Project>> = mutableListOf()
+    private val allConfigurationListeners: List<Action<Project>>
+        get() = listOf(beforeConfigurationListeners, configurationListeners, afterConfigurationListeners).flatten()
 
     fun configure() {
-        project.beforeConfiguration()
-
-        project.configureSourceSets()
-        project.configureConfigurations()
-        project.configureTasks()
-        project.configureArtifacts()
-
-        project.afterConfiguration()
+        allConfigurationListeners.forEach { it.execute(project) }
     }
 
-    protected open fun Project.beforeConfiguration() {}
+    protected fun beforeConfiguration(action: Action<Project>) {
+        beforeConfigurationListeners.add(action)
+    }
 
-    protected open fun Project.configureSourceSets() {}
+    protected fun configureProject(action: Action<Project>) {
+        configurationListeners.add(action)
+    }
 
-    protected open fun Project.configureConfigurations() {}
-
-    protected open fun Project.configureTasks() {}
-
-    protected open fun Project.configureArtifacts() {}
-
-    protected open fun Project.afterConfiguration() {}
+    protected fun afterConfiguration(action: Action<Project>) {
+        afterConfigurationListeners.add(action)
+    }
 }
