@@ -18,7 +18,7 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
 
     init {
         beforeConfiguration {
-            archivesBaseName += "fabric"
+            archivesBaseName += "-fabric"
         }
 
         configureProject {
