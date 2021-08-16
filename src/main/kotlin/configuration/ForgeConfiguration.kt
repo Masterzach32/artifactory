@@ -41,13 +41,12 @@ class ForgeConfiguration(project: Project, commonProject: Project) : AbstractMod
     }
 
     override fun Project.configureConfigurations() {
+        val fg = the<DependencyManagementExtension>()
         ForgeMappedConfigurationEntry.allEntries.forEach {
             configurations.register(it.sourceConfigurationName) {
                 description = "Configuration to hold obfuscated dependencies for the ${it.targetConfigurationName} configuration."
                 isCanBeResolved = false
-                dependencies.all {
-                    project.dependencies.add(it.mappedConfigurationName, the<DependencyManagementExtension>().deobf(this))
-                }
+                dependencies.all { project.dependencies.add(it.mappedConfigurationName, fg.deobf(this)) }
             }
             val mappedConfiguration = configurations.register(it.mappedConfigurationName) {
                 description = "Configuration to hold deobfuscated dependencies for the ${it.targetConfigurationName} configuration."
