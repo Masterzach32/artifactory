@@ -12,8 +12,6 @@ class CommonConfiguration(project: Project) : BaseConfiguration(project) {
 
     init {
         configureProject {
-            configurations["apiImplementation"].extendsFrom(configurations["compileClasspath"])
-
             val remapJar by tasks.existing(RemapJarTask::class) {
                 archiveVersion.set(archivesVersion)
             }

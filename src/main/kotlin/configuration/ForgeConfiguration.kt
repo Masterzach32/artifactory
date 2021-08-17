@@ -42,23 +42,18 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                 configurations.register(it.sourceConfigurationName) {
                     description = "Configuration to hold obfuscated dependencies for the ${it.targetConfigurationName} configuration."
                     isCanBeResolved = false
-                    dependencies.all { project.dependencies.add(it.mappedConfigurationName, fg.deobf(this)) }
+                    isCanBeConsumed = false
+                    allDependencies.all { project.dependencies.add(it.mappedConfigurationName, fg.deobf(this)) }
                 }
                 val mappedConfiguration = configurations.register(it.mappedConfigurationName) {
                     description = "Configuration to hold deobfuscated dependencies for the ${it.targetConfigurationName} configuration."
                     isCanBeResolved = false
+                    isCanBeConsumed = false
                     isTransitive = false
                 }
                 configurations.named(it.targetConfigurationName) {
                     extendsFrom(mappedConfiguration.get())
                 }
-            }
-
-            configurations.named("apiImplementation") {
-                extendsFrom(project.configurations["implementation"])
-            }
-            configurations.named("apiRuntimeOnly") {
-                extendsFrom(project.configurations["runtimeOnly"])
             }
 
             project.tasks.named<ProcessResources>("processResources") {

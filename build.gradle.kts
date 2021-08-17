@@ -1,7 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.*
 
 plugins {
-    kotlin("jvm") version "1.4.31"
     `java-gradle-plugin`
     `kotlin-dsl`
     `maven-publish`

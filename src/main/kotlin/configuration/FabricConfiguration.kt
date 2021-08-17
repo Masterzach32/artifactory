@@ -35,8 +35,6 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
                 }
             }
 
-            configurations["apiImplementation"].extendsFrom(configurations["compileClasspath"])
-
             tasks.named<ProcessResources>("processResources") {
                 duplicatesStrategy = DuplicatesStrategy.FAIL
                 inputs.property("version", project.version)
@@ -67,18 +65,14 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
                     val remapJar = remapJar.get()
                     dependsOn(remapJar)
                     archiveBaseName.set(apiArchivesBaseName)
-                    from(zipTree(remapJar.archiveFile)) {
-                        include("**/api/**")
-                    }
+                    from(zipTree(remapJar.archiveFile)) { include("**/api/**") }
                 }
 
                 apiSourcesJar {
                     val remapSourcesJar = remapSourcesJar.get()
                     dependsOn(remapSourcesJar)
                     archiveBaseName.set(apiArchivesBaseName)
-                    from(zipTree(remapSourcesJar.output)) {
-                        include("**/api/**")
-                    }
+                    from(zipTree(remapSourcesJar.output)) { include("**/api/**") }
                 }
             }
 

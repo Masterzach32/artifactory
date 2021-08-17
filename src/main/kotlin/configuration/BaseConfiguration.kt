@@ -29,6 +29,10 @@ abstract class BaseConfiguration(project: Project) : AbstractModLoaderConfigurat
                 runtimeClasspath += apiSourceSet.output
             }
 
+            configurations.named(sourceSets["api"].compileClasspathConfigurationName) {
+                extendsFrom(project.configurations[sourceSets["main"].compileClasspathConfigurationName])
+            }
+
             tasks.named("jar", Jar::class) {
                 jarConfig(archivesVersion)
                 from(sourceSets["api"].output)
