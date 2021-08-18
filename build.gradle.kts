@@ -8,7 +8,7 @@ plugins {
     id("net.researchgate.release") version "2.8.1"
 }
 
-group = "com.spicymemes"
+group = "com.github.masterzach32"
 
 val isRelease = !version.toString().endsWith("-SNAPSHOT")
 val isSnapshot = !isRelease
@@ -17,7 +17,6 @@ repositories {
     mavenCentral()
     maven("https://maven.minecraftforge.net")
     maven("https://maven.fabricmc.net")
-    mavenLocal()
 }
 
 dependencies {
@@ -33,7 +32,7 @@ tasks.withType<KotlinCompile> {
 gradlePlugin {
     plugins {
         create(project.name) {
-            id = "com.github.masterzach32.artifactory"
+            id = "${project.group}.${project.name}"
             displayName = "Minecraft Artifactory"
             description = "Helps configure multi-target minecraft mods. Supports fabric and forge out of the box."
             implementationClass = "com.spicymemes.artifactory.ArtifactoryPlugin"
