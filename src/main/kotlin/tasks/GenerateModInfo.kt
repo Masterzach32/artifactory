@@ -19,28 +19,16 @@ abstract class GenerateModInfo : DefaultTask() {
     abstract val location: Property<String>
 
     @get:Input
+    abstract val `package`: Property<String>
+
+    @get:Input
     abstract val fileName: Property<String>
 
     init {
         group = "artifactory"
-        description = "Generates the ModInfo.kt source file."
         project.findProperty("modId")?.toString()?.also(modId::convention)
         project.findProperty("modName")?.toString()?.also(modName::convention)
-        modVersion.set(project.version.toString())
-        location.convention("")
-        fileName.convention("ModInfo.kt")
-    }
-
-    @TaskAction
-    fun generate() {
-        val packagePath = location.get().replace(".", "/")
-        project.mkdir("src/main/generated/$packagePath")
-        project.file("src/main/generated/$packagePath/${fileName.get()}").writeText("""
-            package ${location.get()}
-            
-            const val MOD_ID = "${modId.get()}"
-            const val MOD_NAME = "${modName.get()}"
-            const val MOD_VERSION = "${modVersion.get()}"
-        """.trimIndent() + "\n")
+        modVersion.convention(project.version.toString())
+        `package`.convention("artifactory.generated")
     }
 }

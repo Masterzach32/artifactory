@@ -6,13 +6,13 @@ import net.minecraftforge.gradle.userdev.*
 import net.minecraftforge.gradle.userdev.tasks.*
 import org.gradle.api.*
 import org.gradle.api.file.*
+import org.gradle.api.plugins.*
 import org.gradle.api.publish.*
 import org.gradle.api.publish.maven.*
 import org.gradle.api.publish.maven.plugins.*
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.bundling.*
 import org.gradle.kotlin.dsl.*
-import org.gradle.language.jvm.tasks.*
 import java.io.*
 
 class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfiguration(project) {
@@ -56,27 +56,27 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                 }
             }
 
-            project.tasks.named<ProcessResources>("processResources") {
+            tasks.named<Copy>("processResources") {
                 duplicatesStrategy = DuplicatesStrategy.FAIL
                 inputs.property("version", project.version)
                 filesMatching("META-INF/mods.toml") { expand("version" to project.version) }
                 from(commonSourceSets["main"].resources)
             }
 
-            val jar by project.tasks.existing(Jar::class) {
+            val jar by tasks.existing(Jar::class) {
                 commonSourceSets.modSets.forEach {
                     from(it.output)
                 }
                 finalizedBy("reobfJar")
             }
 
-            val sourcesJar by project.tasks.existing(Jar::class) {
+            val sourcesJar by tasks.existing(Jar::class) {
                 commonSourceSets.modSets.forEach {
                     from(it.allSource)
                 }
             }
 
-            val deobfJar by project.tasks.registering(Jar::class) {
+            val deobfJar by tasks.registering(Jar::class) {
                 jarConfig(archivesVersion)
                 archiveClassifier.set("deobf")
                 commonSourceSets.modSets.forEach {
@@ -87,20 +87,20 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                 }
             }
 
-            val apiJar by project.tasks.existing(Jar::class) {
+            val apiJar by tasks.existing(Jar::class) {
                 archiveBaseName.set(apiArchivesBaseName)
                 from(commonSourceSets["api"].output)
                 from(sourceSets["api"].output)
                 finalizedBy("reobfApiJar")
             }
 
-            val apiSourcesJar by project.tasks.existing(Jar::class) {
+            val apiSourcesJar by tasks.existing(Jar::class) {
                 archiveBaseName.set(apiArchivesBaseName)
                 from(commonSourceSets["api"].allSource)
                 from(sourceSets["api"].allSource)
             }
 
-            val apiDeobfJar by project.tasks.registering(Jar::class) {
+            val apiDeobfJar by tasks.registering(Jar::class) {
                 jarConfig(archivesVersion)
                 archiveBaseName.set(apiArchivesBaseName)
                 archiveClassifier.set("deobf")
@@ -155,7 +155,7 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
         fun applyForgeMissingLibsTempfix() {
             project.the<UserDevExtension>().runs.all {
                 lazyToken("minecraft_classpath") {
-                    project.configurations["runtimeClasspath"]
+                    project.configurations[JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME]
                         .copyRecursive { !(it.group == "net.minecraftforge" && it.name == "forge") }
                         .resolve()
                         .joinToString(File.pathSeparator) { it.absolutePath }
@@ -164,7 +164,7 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
         }
 
         fun applyInvalidModuleNameFix() {
-            project.configurations["runtimeOnly"].apply {
+            project.configurations[JavaPlugin.RUNTIME_ONLY_CONFIGURATION_NAME].apply {
                 setExtendsFrom(extendsFrom.filter { it.name != ForgeMappedConfigurationEntry.runtimeOnly.mappedConfigurationName })
             }
 
