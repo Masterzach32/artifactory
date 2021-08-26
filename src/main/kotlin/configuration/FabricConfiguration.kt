@@ -10,7 +10,6 @@ import org.gradle.api.publish.maven.plugins.*
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.bundling.*
 import org.gradle.kotlin.dsl.*
-import org.gradle.language.jvm.tasks.*
 
 class FabricConfiguration(project: Project, commonProject: Project) : BaseConfiguration(project) {
 
@@ -35,7 +34,7 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
                 }
             }
 
-            tasks.named<ProcessResources>("processResources") {
+            tasks.named<Copy>("processResources") {
                 duplicatesStrategy = DuplicatesStrategy.FAIL
                 inputs.property("version", project.version)
                 filesMatching("fabric.mod.json") { expand("version" to project.version) }

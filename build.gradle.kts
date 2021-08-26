@@ -25,7 +25,9 @@ dependencies {
     compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin")
     compileOnly("net.minecraftforge.gradle:ForgeGradle:5.1.+")
     compileOnly("fabric-loom:fabric-loom.gradle.plugin:0.9.+")
-    implementation("com.squareup:kotlinpoet:1.9.0")
+    implementation("com.squareup:kotlinpoet:1.9.0") {
+        exclude(group = "org.jetbrains.kotlin")
+    }
     implementation("com.squareup:javapoet:1.13.0")
 }
 

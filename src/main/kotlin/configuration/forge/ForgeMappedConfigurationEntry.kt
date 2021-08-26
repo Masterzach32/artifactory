@@ -3,16 +3,16 @@ package com.spicymemes.artifactory.configuration.forge
 import org.gradle.api.plugins.*
 
 data class ForgeMappedConfigurationEntry(
-    val sourceConfigurationName: String,
     val targetConfigurationName: String,
 ) {
 
-    val mappedConfigurationName: String = "${sourceConfigurationName}Mapped"
+    val sourceConfigurationName: String = "obf${targetConfigurationName.capitalize()}"
+    val mappedConfigurationName: String = "mapped${targetConfigurationName.capitalize()}"
 
     companion object {
-        val implementation = ForgeMappedConfigurationEntry("modImplementation", JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME)
-        val runtimeOnly = ForgeMappedConfigurationEntry("modRuntimeOnly", JavaPlugin.RUNTIME_ONLY_CONFIGURATION_NAME)
-        val compileOnly = ForgeMappedConfigurationEntry("modCompileOnly", JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME)
+        val implementation = ForgeMappedConfigurationEntry(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME)
+        val runtimeOnly = ForgeMappedConfigurationEntry(JavaPlugin.RUNTIME_ONLY_CONFIGURATION_NAME)
+        val compileOnly = ForgeMappedConfigurationEntry(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME)
 
         val allEntries = listOf(implementation, runtimeOnly, compileOnly)
     }

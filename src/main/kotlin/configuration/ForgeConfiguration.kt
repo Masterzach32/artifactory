@@ -43,7 +43,8 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                     description = "Configuration to hold obfuscated dependencies for the ${it.targetConfigurationName} configuration."
                     isCanBeResolved = false
                     isCanBeConsumed = false
-                    allDependencies.all { project.dependencies.add(it.mappedConfigurationName, fg.deobf(this)) }
+                    isTransitive = false
+                    dependencies.all { project.dependencies.add(it.mappedConfigurationName, fg.deobf(this)) }
                 }
                 val mappedConfiguration = configurations.register(it.mappedConfigurationName) {
                     description = "Configuration to hold deobfuscated dependencies for the ${it.targetConfigurationName} configuration."
