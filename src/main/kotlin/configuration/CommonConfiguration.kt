@@ -13,7 +13,7 @@ class CommonConfiguration(project: Project) : BaseConfiguration(project) {
 
     init {
         configureProject {
-            val remapJar by tasks.existing(RemapJarTask::class) {
+            tasks.named("remapJar", RemapJarTask::class) {
                 archiveVersion.set(archivesVersion)
             }
             val remapSourcesJar by tasks.existing(RemapSourcesJarTask::class)
