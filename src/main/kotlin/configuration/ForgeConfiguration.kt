@@ -174,27 +174,16 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                 isCanBeConsumed = false
             }
 
-            project.afterEvaluate {
-                gradle.projectsEvaluated {
-                    the<UserDevExtension>().runs.all {
-//                        val copyRuntimeMods = tasks.register("copy${name.capitalize()}RuntimeMods", Copy::class) {
-//                            val modsDir = "$workingDirectory/mods"
-//                            doFirst {
-//                                file(modsDir).deleteRecursively()
-//                                mkdir(modsDir)
-//                            }
-//                            from(modRuntimeModFiles.get())
-//                            into(modsDir)
-//                        }
-                        tasks.named("prepareRun${name.capitalize()}") {
-                            doLast {
-                                val modsDir = "$workingDirectory/mods"
-                                file(modsDir).deleteRecursively()
-                                mkdir(modsDir)
-                                copy {
-                                    from(modRuntimeModFiles.get())
-                                    into(modsDir)
-                                }
+            with(project) {
+                the<UserDevExtension>().runs.all {
+                    tasks.named("prepareRun${name.capitalize()}") {
+                        doLast {
+                            val modsDir = "$workingDirectory/mods"
+                            file(modsDir).deleteRecursively()
+                            mkdir(modsDir)
+                            copy {
+                                from(modRuntimeModFiles.get())
+                                into(modsDir)
                             }
                         }
                     }
