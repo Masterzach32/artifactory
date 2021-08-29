@@ -5,6 +5,6 @@ import org.gradle.jvm.tasks.*
 
 internal fun Jar.jarConfig(archiveVersion: String) {
     group = "build"
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.FAIL
     this.archiveVersion.set(archiveVersion)
 }
