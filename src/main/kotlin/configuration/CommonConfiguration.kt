@@ -6,7 +6,6 @@ import org.gradle.api.*
 import org.gradle.api.publish.*
 import org.gradle.api.publish.maven.*
 import org.gradle.api.publish.maven.plugins.*
-import org.gradle.api.tasks.bundling.*
 import org.gradle.kotlin.dsl.*
 
 class CommonConfiguration(project: Project) : BaseConfiguration(project) {
@@ -18,23 +17,22 @@ class CommonConfiguration(project: Project) : BaseConfiguration(project) {
             }
             val remapSourcesJar by tasks.existing(RemapSourcesJarTask::class)
 
-            val apiJar by tasks.existing(Jar::class) {
+            tasks.apiJar {
                 archiveBaseName.set(apiArchivesBaseName)
                 archiveClassifier.set("dev")
-                from(sourceSets["api"].output)
             }
             val remapApiJar by tasks.registering(RemapJarTask::class) {
                 description = "Remaps the built project api jar to intermediary mappings."
                 group = Constants.TaskGroup.FABRIC
-                dependsOn(apiJar)
+                dependsOn(tasks.apiJar)
                 archiveVersion.set(archivesVersion)
                 archiveBaseName.set(apiArchivesBaseName)
                 addNestedDependencies.set(true)
-                input.set(apiJar.flatMap { it.archiveFile })
+                input.set(tasks.apiJar.flatMap { it.archiveFile })
+                classpath(configurations.apiCompileClasspath.get())
             }
-            val apiSourcesJar by tasks.existing(Jar::class)
             project.afterEvaluate {
-                apiSourcesJar {
+                tasks.apiSourcesJar {
                     val remapSourcesJar = remapSourcesJar.get()
                     dependsOn(remapSourcesJar)
                     archiveBaseName.set(apiArchivesBaseName)
@@ -42,7 +40,7 @@ class CommonConfiguration(project: Project) : BaseConfiguration(project) {
                 }
             }
 
-            tasks.named("assemble") {
+            tasks.assemble {
                 dependsOn(remapApiJar)
             }
 
@@ -51,8 +49,8 @@ class CommonConfiguration(project: Project) : BaseConfiguration(project) {
                     publications {
                         named<MavenPublication>("api") {
                             artifactId = apiArchivesBaseName
-                            artifact(remapApiJar)
-                            artifact(apiSourcesJar)
+                            artifact(remapApiJar).builtBy(remapApiJar)
+                            artifact(tasks.apiSourcesJar)
                         }
 
                         remove(getByName("mod"))

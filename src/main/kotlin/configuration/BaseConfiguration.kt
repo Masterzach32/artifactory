@@ -8,7 +8,6 @@ import org.gradle.api.publish.maven.*
 import org.gradle.api.publish.maven.plugins.*
 import org.gradle.api.tasks.bundling.*
 import org.gradle.kotlin.dsl.*
-import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 
 abstract class BaseConfiguration(project: Project) : AbstractModLoaderConfiguration(project) {
@@ -28,7 +27,7 @@ abstract class BaseConfiguration(project: Project) : AbstractModLoaderConfigurat
                     setSrcDirs(listOf("$buildDir/generated-sources/kotlin", "$buildDir/generated-sources/java"))
                 }
                 resources {
-                    setSrcDirs(listOf("$buildDir/generated-sources/resources"))
+                    setSrcDirs(listOf("$buildDir/generated-resources"))
                 }
             }
 
@@ -39,38 +38,45 @@ abstract class BaseConfiguration(project: Project) : AbstractModLoaderConfigurat
                 }
             }
 
-            configurations.named(sourceSets["api"].compileClasspathConfigurationName) {
-                extendsFrom(project.configurations[sourceSets["main"].compileClasspathConfigurationName])
+            sourceSets.main {
+                resources.srcDir("src/generated/resources")
+            }
+
+            configurations.apiCompileClasspath {
+                extendsFrom(configurations.compileClasspath.get())
             }
 
             tasks.named(generatedSourceSet.get().compileJavaTaskName) {
                 dependsOn(tasks.withType(GenerateJavaModInfo::class))
             }
 
-            plugins.withType(KotlinPluginWrapper::class) {
-                the<KotlinJvmProjectExtension>().target {  }
-                tasks.named("compileGeneratedKotlin") {
-                    dependsOn(tasks.withType(GenerateKotlinModInfo::class))
+            if (project.plugins.hasPlugin("org.jetbrains.kotlin.jvm")) {
+                plugins.withType(KotlinPluginWrapper::class) {
+                    tasks.named("compileGeneratedKotlin") {
+                        dependsOn(tasks.withType(GenerateKotlinModInfo::class))
+                    }
                 }
             }
 
-            tasks.named("jar", Jar::class) {
+            tasks.jar {
                 jarConfig(archivesVersion)
-                from(apiSourceSet.get().output)
-                from(generatedSourceSet.get().output)
+                // because the jar task already includes the main SourceSet
+                sourceSets.nonTestSets.matching { it.name != "main" }.forEach {
+                    from(it.output)
+                }
             }
 
             val sourcesJar by tasks.registering(Jar::class) {
                 jarConfig(archivesVersion)
                 archiveClassifier.set("sources")
-                sourceSets.modSets.forEach {
+                sourceSets.nonTestSets.forEach {
                     from(it.allSource)
                 }
-                from(generatedSourceSet.get().allSource)
             }
 
             val apiJar by tasks.registering(Jar::class) {
                 jarConfig(archivesVersion)
+                from(sourceSets["api"].output)
             }
 
             val apiSourcesJar by tasks.registering(Jar::class) {
@@ -78,7 +84,7 @@ abstract class BaseConfiguration(project: Project) : AbstractModLoaderConfigurat
                 archiveClassifier.set("sources")
             }
 
-            tasks.named("assemble") {
+            tasks.assemble {
                 dependsOn(sourcesJar, apiJar, apiSourcesJar)
             }
 

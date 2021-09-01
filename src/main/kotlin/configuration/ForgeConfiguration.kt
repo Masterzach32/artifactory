@@ -3,21 +3,17 @@ package com.spicymemes.artifactory.configuration
 import com.spicymemes.artifactory.*
 import com.spicymemes.artifactory.configuration.forge.*
 import net.minecraftforge.gradle.userdev.*
-import net.minecraftforge.gradle.userdev.tasks.*
 import org.gradle.api.*
 import org.gradle.api.file.*
 import org.gradle.api.plugins.*
 import org.gradle.api.publish.*
 import org.gradle.api.publish.maven.*
 import org.gradle.api.publish.maven.plugins.*
-import org.gradle.api.tasks.*
-import org.gradle.api.tasks.bundling.*
+import org.gradle.jvm.tasks.*
 import org.gradle.kotlin.dsl.*
 import java.io.*
 
 class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfiguration(project) {
-
-    private val commonSourceSets = commonProject.the<SourceSetContainer>()
 
     init {
         beforeConfiguration {
@@ -25,19 +21,17 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
         }
 
         configureProject {
-            sourceSets["api"].apply {
-                commonSourceSets["api"].also { commonApi ->
+            sourceSets.api {
+                commonProject.sourceSets["api"].also { commonApi ->
                     compileClasspath += commonApi.output
                 }
             }
-            sourceSets["main"].apply {
-                commonSourceSets.filter { it.name != "test" }.forEach { sourceSet ->
+            sourceSets.main {
+                commonProject.sourceSets.nonTestSets.forEach { sourceSet ->
                     compileClasspath += sourceSet.output
                 }
-                resources.srcDir("src/generated/resources")
             }
 
-            val fg = the<DependencyManagementExtension>()
             ForgeMappedConfigurationEntry.allEntries.forEach {
                 configurations.register(it.sourceConfigurationName) {
                     description = "Configuration to hold obfuscated dependencies for the ${it.targetConfigurationName} configuration."
@@ -57,22 +51,22 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                 }
             }
 
-            tasks.named<Copy>("processResources") {
+            tasks.processResources {
                 duplicatesStrategy = DuplicatesStrategy.FAIL
                 inputs.property("version", project.version)
                 filesMatching("META-INF/mods.toml") { expand("version" to project.version) }
-                from(commonSourceSets["main"].resources)
+                from(commonProject.sourceSets["main"].resources)
             }
 
-            val jar by tasks.existing(Jar::class) {
-                commonSourceSets.modSets.forEach {
+            tasks.jar {
+                commonProject.sourceSets.nonTestSets.forEach {
                     from(it.output)
                 }
                 finalizedBy("reobfJar")
             }
 
-            val sourcesJar by tasks.existing(Jar::class) {
-                commonSourceSets.modSets.forEach {
+            tasks.sourcesJar {
+                commonProject.sourceSets.nonTestSets.forEach {
                     from(it.allSource)
                 }
             }
@@ -80,24 +74,23 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
             val deobfJar by tasks.registering(Jar::class) {
                 jarConfig(archivesVersion)
                 archiveClassifier.set("deobf")
-                commonSourceSets.modSets.forEach {
+                commonProject.sourceSets.nonTestSets.forEach {
                     from(it.output)
                 }
-                sourceSets.modSets.forEach {
+                sourceSets.nonTestSets.forEach {
                     from(it.output)
                 }
             }
 
-            val apiJar by tasks.existing(Jar::class) {
+            tasks.apiJar {
                 archiveBaseName.set(apiArchivesBaseName)
-                from(commonSourceSets["api"].output)
-                from(sourceSets["api"].output)
+                from(commonProject.sourceSets["api"].output)
                 finalizedBy("reobfApiJar")
             }
 
-            val apiSourcesJar by tasks.existing(Jar::class) {
+            tasks.apiSourcesJar {
                 archiveBaseName.set(apiArchivesBaseName)
-                from(commonSourceSets["api"].allSource)
+                from(commonProject.sourceSets["api"].allSource)
                 from(sourceSets["api"].allSource)
             }
 
@@ -105,15 +98,15 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                 jarConfig(archivesVersion)
                 archiveBaseName.set(apiArchivesBaseName)
                 archiveClassifier.set("deobf")
-                from(commonSourceSets["api"].output)
+                from(commonProject.sourceSets["api"].output)
                 from(sourceSets["api"].output)
             }
 
-            tasks.named("assemble") {
+            tasks.assemble {
                 dependsOn(deobfJar, apiDeobfJar)
             }
 
-            extensions.configure<NamedDomainObjectContainer<RenameJarInPlace>>("reobf") {
+            reobf {
                 create("apiJar") {
                     classpath.from(sourceSets["api"].compileClasspath)
                 }
@@ -127,14 +120,14 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                     publications {
                         named<MavenPublication>("mod") {
                             artifactId = archivesBaseName
-                            artifact(jar)
-                            artifact(sourcesJar)
+                            artifact(tasks.jar)
+                            artifact(tasks.sourcesJar)
                             artifact(deobfJar)
                         }
                         named<MavenPublication>("api") {
                             artifactId = apiArchivesBaseName
-                            artifact(apiJar)
-                            artifact(apiSourcesJar)
+                            artifact(tasks.apiJar)
+                            artifact(tasks.apiSourcesJar)
                             artifact(apiDeobfJar)
                         }
                     }
@@ -165,7 +158,7 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
         }
 
         fun applyInvalidModuleNameFix() {
-            project.configurations[JavaPlugin.RUNTIME_ONLY_CONFIGURATION_NAME].apply {
+            project.configurations.named(JavaPlugin.RUNTIME_ONLY_CONFIGURATION_NAME) {
                 setExtendsFrom(extendsFrom.filter { it.name != ForgeMappedConfigurationEntry.runtimeOnly.mappedConfigurationName })
             }
 
@@ -174,16 +167,18 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                 isCanBeConsumed = false
             }
 
-            with(project) {
-                the<UserDevExtension>().runs.all {
-                    tasks.named("prepareRun${name.capitalize()}") {
-                        doLast {
-                            val modsDir = "$workingDirectory/mods"
-                            file(modsDir).deleteRecursively()
-                            mkdir(modsDir)
-                            copy {
-                                from(modRuntimeModFiles.get())
-                                into(modsDir)
+            project.afterEvaluate {
+                project.gradle.projectsEvaluated {
+                    the<UserDevExtension>().runs.all {
+                        tasks.named("prepareRun${name.capitalize()}") {
+                            doLast {
+                                val modsDir = "$workingDirectory/mods"
+                                file(modsDir).deleteRecursively()
+                                mkdir(modsDir)
+                                copy {
+                                    from(modRuntimeModFiles.get())
+                                    into(modsDir)
+                                }
                             }
                         }
                     }

@@ -1,12 +1,12 @@
 package com.spicymemes.artifactory.configuration
 
+import com.spicymemes.artifactory.internal.*
 import org.gradle.api.*
 import org.gradle.api.artifacts.*
 import org.gradle.api.plugins.*
-import org.gradle.api.tasks.*
 import org.gradle.kotlin.dsl.*
 
-abstract class AbstractModLoaderConfiguration(protected val project: Project) {
+abstract class AbstractModLoaderConfiguration(protected val project: Project) : ProjectDslHelper() {
 
     var archivesBaseName: String by project.extensions.getByType<BasePluginExtension>().archivesName
     val apiArchivesBaseName: String
@@ -21,8 +21,6 @@ abstract class AbstractModLoaderConfiguration(protected val project: Project) {
             "$mcVersion-${project.version}"
         else
             "${project.version}"
-
-    protected val sourceSets = project.the<SourceSetContainer>()
 
     private val beforeConfigurationListeners: MutableList<Action<Project>> = mutableListOf()
     private val configurationListeners: MutableList<Action<Project>> = mutableListOf()

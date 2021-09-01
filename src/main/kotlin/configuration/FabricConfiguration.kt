@@ -1,6 +1,5 @@
 package com.spicymemes.artifactory.configuration
 
-import com.spicymemes.artifactory.*
 import net.fabricmc.loom.task.*
 import net.fabricmc.loom.util.*
 import org.gradle.api.*
@@ -8,13 +7,9 @@ import org.gradle.api.file.*
 import org.gradle.api.publish.*
 import org.gradle.api.publish.maven.*
 import org.gradle.api.publish.maven.plugins.*
-import org.gradle.api.tasks.*
-import org.gradle.api.tasks.bundling.*
 import org.gradle.kotlin.dsl.*
 
 class FabricConfiguration(project: Project, commonProject: Project) : BaseConfiguration(project) {
-
-    private val commonSourceSets = commonProject.the<SourceSetContainer>()
 
     init {
         beforeConfiguration {
@@ -22,33 +17,33 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
         }
 
         configureProject {
-            sourceSets["api"].apply {
-                commonSourceSets["api"].also { commonApi ->
+            sourceSets.api {
+                commonProject.sourceSets["api"].also { commonApi ->
                     compileClasspath += commonApi.output
                     runtimeClasspath += commonApi.output
                 }
             }
-            sourceSets["main"].apply {
-                commonSourceSets.filter { it.name != "test" }.forEach { sourceSet ->
+            sourceSets.main {
+                commonProject.sourceSets.nonTestSets.forEach { sourceSet ->
                     compileClasspath += sourceSet.output
                     runtimeClasspath += sourceSet.output
                 }
             }
 
-            tasks.named<Copy>("processResources") {
+            tasks.processResources {
                 duplicatesStrategy = DuplicatesStrategy.FAIL
                 inputs.property("version", project.version)
                 filesMatching("fabric.mod.json") { expand("version" to project.version) }
-                from(commonSourceSets["main"].resources)
+                from(commonProject.sourceSets["main"].resources)
             }
 
-            tasks.named("jar", Jar::class) {
-                commonSourceSets.modSets.forEach {
+            tasks.jar {
+                commonProject.sourceSets.nonTestSets.forEach {
                     from(it.output)
                 }
             }
-            val sourcesJar by tasks.existing(Jar::class) {
-                commonSourceSets.modSets.forEach {
+            tasks.sourcesJar {
+                commonProject.sourceSets.nonTestSets.forEach {
                     from(it.allSource)
                 }
             }
@@ -58,24 +53,24 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
             }
             val remapSourcesJar by tasks.existing(RemapSourcesJarTask::class)
 
-            val apiJar by tasks.existing(Jar::class) {
+            tasks.apiJar {
                 archiveBaseName.set(apiArchivesBaseName)
                 archiveClassifier.set("dev")
-                from(sourceSets["api"].output)
+                from(commonProject.sourceSets["api"].output)
             }
             val remapApiJar by tasks.registering(RemapJarTask::class) {
                 description = "Remaps the built project api jar to intermediary mappings."
                 group = Constants.TaskGroup.FABRIC
-                dependsOn(apiJar)
+                dependsOn(tasks.apiJar)
                 archiveVersion.set(archivesVersion)
                 archiveBaseName.set(apiArchivesBaseName)
                 addNestedDependencies.set(true)
-                input.set(apiJar.flatMap { it.archiveFile })
+                input.set(tasks.apiJar.flatMap { it.archiveFile })
+                classpath(configurations.apiCompileClasspath.get())
             }
 
-            val apiSourcesJar by tasks.existing(Jar::class)
             project.afterEvaluate {
-                apiSourcesJar {
+                tasks.apiSourcesJar {
                     val remapSourcesJar = remapSourcesJar.get()
                     dependsOn(remapSourcesJar)
                     archiveBaseName.set(apiArchivesBaseName)
@@ -83,7 +78,7 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
                 }
             }
 
-            tasks.named("assemble") {
+            tasks.assemble {
                 dependsOn(remapApiJar)
             }
 
@@ -92,15 +87,13 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
                     publications {
                         named<MavenPublication>("mod") {
                             artifactId = archivesBaseName
-                            artifact(remapJar)
-                            artifact(sourcesJar) {
-                                builtBy(remapSourcesJar)
-                            }
+                            artifact(remapJar).builtBy(remapJar)
+                            artifact(tasks.sourcesJar).builtBy(remapSourcesJar)
                         }
                         named<MavenPublication>("api") {
                             artifactId = apiArchivesBaseName
-                            artifact(remapApiJar)
-                            artifact(apiSourcesJar)
+                            artifact(remapApiJar).builtBy(remapApiJar)
+                            artifact(tasks.apiSourcesJar)
                         }
                     }
                 }
