@@ -16,13 +16,13 @@ on:
       - '**.gradle*'
       - '**.properties'
       - '**/src/**'
-    types: [opened, synchronize, reopened]
+    types: [ opened, synchronize, reopened ]
 
 jobs:
   build:
     name: Build with JDK ${{ matrix.java }}
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'Masterzach32/SwagBot' }}
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'Masterzach32/artifactory' }}
     strategy:
       matrix:
         java: [ 16 ]
