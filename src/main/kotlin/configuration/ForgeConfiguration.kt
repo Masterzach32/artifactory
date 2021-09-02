@@ -1,17 +1,17 @@
 package com.spicymemes.artifactory.configuration
 
-import com.spicymemes.artifactory.*
-import com.spicymemes.artifactory.configuration.forge.*
-import net.minecraftforge.gradle.userdev.*
-import org.gradle.api.*
-import org.gradle.api.file.*
-import org.gradle.api.plugins.*
-import org.gradle.api.publish.*
-import org.gradle.api.publish.maven.*
-import org.gradle.api.publish.maven.plugins.*
-import org.gradle.jvm.tasks.*
+import com.spicymemes.artifactory.configuration.forge.ForgeMappedConfigurationEntry
+import com.spicymemes.artifactory.jarConfig
+import net.minecraftforge.gradle.userdev.UserDevExtension
+import org.gradle.api.Project
+import org.gradle.api.file.DuplicatesStrategy
+import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
+import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
-import java.io.*
+import java.io.File
 
 class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfiguration(project) {
 
@@ -34,14 +34,16 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
 
             ForgeMappedConfigurationEntry.allEntries.forEach {
                 configurations.register(it.sourceConfigurationName) {
-                    description = "Configuration to hold obfuscated dependencies for the ${it.targetConfigurationName} configuration."
+                    description =
+                        "Configuration to hold obfuscated dependencies for the ${it.targetConfigurationName} configuration."
                     isCanBeResolved = false
                     isCanBeConsumed = false
                     isTransitive = false
                     dependencies.all { project.dependencies.add(it.mappedConfigurationName, fg.deobf(this)) }
                 }
                 val mappedConfiguration = configurations.register(it.mappedConfigurationName) {
-                    description = "Configuration to hold deobfuscated dependencies for the ${it.targetConfigurationName} configuration."
+                    description =
+                        "Configuration to hold deobfuscated dependencies for the ${it.targetConfigurationName} configuration."
                     isCanBeResolved = false
                     isCanBeConsumed = false
                     isTransitive = false
@@ -55,7 +57,7 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                 duplicatesStrategy = DuplicatesStrategy.FAIL
                 inputs.property("version", project.version)
                 filesMatching("META-INF/mods.toml") { expand("version" to project.version) }
-                from(commonProject.sourceSets["main"].resources)
+//                from(commonProject.sourceSets["main"].resources)
             }
 
             tasks.jar {

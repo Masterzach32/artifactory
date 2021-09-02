@@ -1,13 +1,14 @@
 package com.spicymemes.artifactory.internal
 
-import net.minecraftforge.gradle.userdev.*
-import net.minecraftforge.gradle.userdev.tasks.*
+import net.minecraftforge.gradle.userdev.DependencyManagementExtension
+import net.minecraftforge.gradle.userdev.tasks.RenameJarInPlace
 import org.gradle.api.*
-import org.gradle.api.artifacts.*
-import org.gradle.api.plugins.*
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ConfigurationContainer
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.*
-import org.gradle.jvm.tasks.*
-import org.gradle.kotlin.dsl.*
+import org.gradle.jvm.tasks.Jar
+import org.gradle.kotlin.dsl.the
 
 abstract class ProjectDslHelper {
 

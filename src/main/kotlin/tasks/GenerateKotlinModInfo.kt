@@ -1,8 +1,12 @@
 package com.spicymemes.artifactory.tasks
 
-import com.squareup.kotlinpoet.*
-import org.gradle.api.tasks.*
-import org.gradle.kotlin.dsl.*
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.PropertySpec
+import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.TaskAction
+import org.gradle.kotlin.dsl.get
+import org.gradle.kotlin.dsl.the
 
 abstract class GenerateKotlinModInfo : GenerateModInfo() {
 

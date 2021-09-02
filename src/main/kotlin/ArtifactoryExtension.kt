@@ -1,8 +1,8 @@
 package com.spicymemes.artifactory
 
 import com.spicymemes.artifactory.configuration.*
-import org.gradle.api.*
-import org.gradle.api.artifacts.*
+import org.gradle.api.Project
+import org.gradle.api.artifacts.ProjectDependency
 
 open class ArtifactoryExtension(
     private val project: Project,
@@ -18,7 +18,7 @@ open class ArtifactoryExtension(
      */
     fun common() {
         checkIsSetup("common")
-        if(!project.plugins.hasPlugin("fabric-loom"))
+        if (!project.plugins.hasPlugin("fabric-loom"))
             error("Project ${project.name} of target type \"common\" needs to have the fabric-loom plugin applied.")
 
         _configuration = CommonConfiguration(project)
@@ -30,7 +30,7 @@ open class ArtifactoryExtension(
      */
     fun fabric(commonProject: Project) {
         checkIsSetup("fabric")
-        if(!project.plugins.hasPlugin("fabric-loom"))
+        if (!project.plugins.hasPlugin("fabric-loom"))
             error("Project ${project.name} of target type \"fabric\" needs to have the fabric-loom plugin applied.")
 
         _configuration = FabricConfiguration(project, commonProject)
@@ -42,7 +42,7 @@ open class ArtifactoryExtension(
      */
     fun forge(commonProject: Project) {
         checkIsSetup("forge")
-        if(!project.plugins.hasPlugin("net.minecraftforge.gradle"))
+        if (!project.plugins.hasPlugin("net.minecraftforge.gradle"))
             error("Project ${project.name} of target type \"forge\" needs to have the net.minecraftforge.gradle plugin applied.")
 
         _configuration = ForgeConfiguration(project, commonProject)

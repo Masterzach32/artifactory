@@ -1,8 +1,8 @@
 package com.spicymemes.artifactory.tasks
 
-import org.gradle.api.*
-import org.gradle.api.provider.*
-import org.gradle.api.tasks.*
+import org.gradle.api.DefaultTask
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 
 abstract class GenerateModInfo : DefaultTask() {
 

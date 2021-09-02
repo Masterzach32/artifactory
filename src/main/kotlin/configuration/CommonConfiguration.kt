@@ -1,11 +1,12 @@
 package com.spicymemes.artifactory.configuration
 
-import net.fabricmc.loom.task.*
-import net.fabricmc.loom.util.*
-import org.gradle.api.*
-import org.gradle.api.publish.*
-import org.gradle.api.publish.maven.*
-import org.gradle.api.publish.maven.plugins.*
+import net.fabricmc.loom.task.RemapJarTask
+import net.fabricmc.loom.task.RemapSourcesJarTask
+import net.fabricmc.loom.util.Constants
+import org.gradle.api.Project
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.kotlin.dsl.*
 
 class CommonConfiguration(project: Project) : BaseConfiguration(project) {

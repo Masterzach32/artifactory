@@ -1,9 +1,13 @@
 package com.spicymemes.artifactory.tasks
 
-import com.squareup.javapoet.*
-import org.gradle.api.tasks.*
-import org.gradle.kotlin.dsl.*
-import javax.lang.model.element.*
+import com.squareup.javapoet.FieldSpec
+import com.squareup.javapoet.JavaFile
+import com.squareup.javapoet.TypeSpec
+import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.TaskAction
+import org.gradle.kotlin.dsl.get
+import org.gradle.kotlin.dsl.the
+import javax.lang.model.element.Modifier
 
 abstract class GenerateJavaModInfo : GenerateModInfo() {
 

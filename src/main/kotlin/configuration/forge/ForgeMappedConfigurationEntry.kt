@@ -1,6 +1,6 @@
 package com.spicymemes.artifactory.configuration.forge
 
-import org.gradle.api.plugins.*
+import org.gradle.api.plugins.JavaPlugin
 
 data class ForgeMappedConfigurationEntry(
     val targetConfigurationName: String,

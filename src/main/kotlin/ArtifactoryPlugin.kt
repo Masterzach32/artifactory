@@ -1,9 +1,12 @@
 package com.spicymemes.artifactory
 
 import com.spicymemes.artifactory.configuration.*
-import org.gradle.api.*
-import org.gradle.api.plugins.*
-import org.gradle.kotlin.dsl.*
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.plugins.JavaPlugin
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.the
 
 class ArtifactoryPlugin : Plugin<Project> {
 

@@ -1,9 +1,11 @@
 package com.spicymemes.artifactory.configuration
 
-import com.spicymemes.artifactory.internal.*
-import org.gradle.api.*
-import org.gradle.api.artifacts.*
-import org.gradle.api.plugins.*
+import com.spicymemes.artifactory.internal.ProjectDslHelper
+import org.gradle.api.Action
+import org.gradle.api.Project
+import org.gradle.api.artifacts.VersionCatalog
+import org.gradle.api.plugins.BasePluginExtension
+import org.gradle.api.plugins.ExtraPropertiesExtension
 import org.gradle.kotlin.dsl.*
 
 abstract class AbstractModLoaderConfiguration(protected val project: Project) : ProjectDslHelper() {
@@ -16,8 +18,8 @@ abstract class AbstractModLoaderConfiguration(protected val project: Project) : 
         ?: project.findProperty("mcVersion")?.toString()
         ?: project.findProperty("minecraftVersion")?.toString()
 
-    val archivesVersion: String = project.rootProject.the<ExtraPropertiesExtension>().get("archivesVersion")?.toString() ?:
-        if (mcVersion != null)
+    val archivesVersion: String =
+        project.rootProject.the<ExtraPropertiesExtension>().get("archivesVersion")?.toString() ?: if (mcVersion != null)
             "$mcVersion-${project.version}"
         else
             "${project.version}"

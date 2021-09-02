@@ -1,12 +1,13 @@
 package com.spicymemes.artifactory.configuration
 
-import net.fabricmc.loom.task.*
-import net.fabricmc.loom.util.*
-import org.gradle.api.*
-import org.gradle.api.file.*
-import org.gradle.api.publish.*
-import org.gradle.api.publish.maven.*
-import org.gradle.api.publish.maven.plugins.*
+import net.fabricmc.loom.task.RemapJarTask
+import net.fabricmc.loom.task.RemapSourcesJarTask
+import net.fabricmc.loom.util.Constants
+import org.gradle.api.Project
+import org.gradle.api.file.DuplicatesStrategy
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.kotlin.dsl.*
 
 class FabricConfiguration(project: Project, commonProject: Project) : BaseConfiguration(project) {
@@ -34,7 +35,7 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
                 duplicatesStrategy = DuplicatesStrategy.FAIL
                 inputs.property("version", project.version)
                 filesMatching("fabric.mod.json") { expand("version" to project.version) }
-                from(commonProject.sourceSets["main"].resources)
+//                from(commonProject.sourceSets["main"].resources)
             }
 
             tasks.jar {
