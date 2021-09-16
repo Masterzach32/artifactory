@@ -39,22 +39,23 @@ abstract class BaseConfiguration(project: Project) : AbstractModLoaderConfigurat
                 }
             }
 
-            sourceSets.main {
-                resources.srcDir("src/generated/resources")
-            }
+//            sourceSets.main {
+//                resources.srcDir("src/generated/resources")
+//            }
 
             configurations.apiCompileClasspath {
                 extendsFrom(configurations.compileClasspath.get())
             }
 
-            tasks.named(generatedSourceSet.get().compileJavaTaskName) {
-                dependsOn(tasks.withType(GenerateJavaModInfo::class))
-            }
-
-            if (project.plugins.hasPlugin("org.jetbrains.kotlin.jvm")) {
-                plugins.withType(KotlinPluginWrapper::class) {
-                    tasks.named("compileGeneratedKotlin") {
-                        dependsOn(tasks.withType(GenerateKotlinModInfo::class))
+            generatedSourceSet {
+                tasks.named(compileJavaTaskName) {
+                    dependsOn(tasks.withType(GenerateJavaModInfo::class))
+                }
+                if (project.plugins.hasPlugin("org.jetbrains.kotlin.jvm")) {
+                    plugins.withType(KotlinPluginWrapper::class) {
+                        tasks.named("compileGeneratedKotlin") {
+                            dependsOn(tasks.withType(GenerateKotlinModInfo::class))
+                        }
                     }
                 }
             }

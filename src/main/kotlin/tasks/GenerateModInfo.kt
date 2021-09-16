@@ -16,7 +16,7 @@ abstract class GenerateModInfo : DefaultTask() {
     abstract val modVersion: Property<String>
 
     @get:Input
-    abstract val location: Property<String>
+    abstract val srcDir: Property<String>
 
     @get:Input
     abstract val `package`: Property<String>

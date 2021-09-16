@@ -6,7 +6,8 @@ data class ForgeMappedConfigurationEntry(
     val targetConfigurationName: String,
 ) {
 
-    val sourceConfigurationName: String = "obf${targetConfigurationName.capitalize()}"
+    val sourceConfigurationName: String = "mod${targetConfigurationName.capitalize()}"
+    val oldSourceConfigurationName: String = "obf${targetConfigurationName.capitalize()}"
     val mappedConfigurationName: String = "mapped${targetConfigurationName.capitalize()}"
 
     companion object {

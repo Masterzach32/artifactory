@@ -12,14 +12,14 @@ import javax.lang.model.element.Modifier
 abstract class GenerateJavaModInfo : GenerateModInfo() {
 
     init {
-        location.convention(project.the<SourceSetContainer>()["generated"].java.srcDirs.last().path)
+        srcDir.convention(project.the<SourceSetContainer>()["generated"].java.srcDirs.last().path)
         fileName.convention("ModInfo.java")
     }
 
     @TaskAction
     fun generate() {
         val packagePath = `package`.get().replace(".", "/")
-        project.mkdir("${location.get()}/$packagePath")
+        project.mkdir("${srcDir.get()}/$packagePath")
 
         val typeSpec = TypeSpec.classBuilder("ModInfo")
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -45,6 +45,6 @@ abstract class GenerateJavaModInfo : GenerateModInfo() {
 
         val file = JavaFile.builder(`package`.get(), typeSpec).build()
 
-        project.file("${location.get()}/$packagePath/${fileName.get()}").writeText(file.toString())
+        project.file("${srcDir.get()}/$packagePath/${fileName.get()}").writeText(file.toString())
     }
 }

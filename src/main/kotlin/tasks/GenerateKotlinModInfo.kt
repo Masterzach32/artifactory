@@ -11,14 +11,14 @@ import org.gradle.kotlin.dsl.the
 abstract class GenerateKotlinModInfo : GenerateModInfo() {
 
     init {
-        location.convention(project.the<SourceSetContainer>()["generated"].java.srcDirs.first().path)
+        srcDir.convention(project.the<SourceSetContainer>()["generated"].java.srcDirs.first().path)
         fileName.convention("ModInfo.kt")
     }
 
     @TaskAction
     fun generate() {
         val packagePath = `package`.get().replace(".", "/")
-        project.mkdir("${location.get()}/$packagePath")
+        project.mkdir("${srcDir.get()}/$packagePath")
 
         val file = FileSpec.builder(`package`.get(), fileName.get())
             .addProperty(
@@ -38,6 +38,6 @@ abstract class GenerateKotlinModInfo : GenerateModInfo() {
             )
             .build()
 
-        project.file("${location.get()}/$packagePath/${fileName.get()}").writeText(file.toString())
+        project.file("${srcDir.get()}/$packagePath/${fileName.get()}").writeText(file.toString())
     }
 }
