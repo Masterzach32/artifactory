@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.tasks.*
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `java-gradle-plugin`
@@ -24,7 +24,7 @@ dependencies {
     implementation(gradleKotlinDsl())
     compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin")
     compileOnly("net.minecraftforge.gradle:ForgeGradle:5.1.+")
-    compileOnly("fabric-loom:fabric-loom.gradle.plugin:0.9.+")
+    compileOnly("fabric-loom:fabric-loom.gradle.plugin:0.10.+")
     implementation("com.squareup:kotlinpoet:1.9.0") {
         exclude(group = "org.jetbrains.kotlin")
     }
