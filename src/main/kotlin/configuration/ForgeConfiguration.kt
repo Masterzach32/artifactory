@@ -41,19 +41,6 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                     isTransitive = false
                     dependencies.all { project.dependencies.add(it.mappedConfigurationName, fg.deobf(this)) }
                 }
-                configurations.register(it.oldSourceConfigurationName) {
-                    description =
-                        "Configuration to hold obfuscated dependencies for the " +
-                            "${it.targetConfigurationName} configuration."
-                    isCanBeResolved = false
-                    isCanBeConsumed = false
-                    isTransitive = false
-                    dependencies.all {
-                        logger.warn("The configuration ${it.oldSourceConfigurationName} will be removed in " +
-                            "artifactory 0.5. use ${it.sourceConfigurationName} instead.")
-                        project.dependencies.add(it.mappedConfigurationName, fg.deobf(this))
-                    }
-                }
                 val mappedConfiguration = configurations.register(it.mappedConfigurationName) {
                     description =
                         "Configuration to hold deobfuscated dependencies for the " +
