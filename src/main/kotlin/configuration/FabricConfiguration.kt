@@ -35,7 +35,6 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
                 duplicatesStrategy = DuplicatesStrategy.FAIL
                 inputs.property("version", project.version)
                 filesMatching("fabric.mod.json") { expand("version" to project.version) }
-//                from(commonProject.sourceSets["main"].resources)
             }
 
             tasks.jar {
@@ -65,7 +64,6 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
                 dependsOn(tasks.apiJar)
                 archiveVersion.set(archivesVersion)
                 archiveBaseName.set(apiArchivesBaseName)
-                addNestedDependencies.set(true)
                 input.set(tasks.apiJar.flatMap { it.archiveFile })
                 classpath(configurations.apiCompileClasspath.get())
             }
@@ -79,6 +77,16 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
                 }
             }
 
+            artifacts {
+                add(configurations.modApiJars.name, remapApiJar)
+                add(configurations.modApiJars.name, tasks.apiSourcesJar)
+
+                add(configurations.modJars.name, remapJar)
+                add(configurations.modJars.name, tasks.sourcesJar) {
+                    builtBy(remapSourcesJar)
+                }
+            }
+
             tasks.assemble {
                 dependsOn(remapApiJar)
             }
@@ -88,13 +96,6 @@ class FabricConfiguration(project: Project, commonProject: Project) : BaseConfig
                     publications {
                         named<MavenPublication>("mod") {
                             artifactId = archivesBaseName
-                            artifact(remapJar).builtBy(remapJar)
-                            artifact(tasks.sourcesJar).builtBy(remapSourcesJar)
-                        }
-                        named<MavenPublication>("api") {
-                            artifactId = apiArchivesBaseName
-                            artifact(remapApiJar).builtBy(remapApiJar)
-                            artifact(tasks.apiSourcesJar)
                         }
                     }
                 }

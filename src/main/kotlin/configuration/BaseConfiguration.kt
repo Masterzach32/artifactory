@@ -39,10 +39,6 @@ abstract class BaseConfiguration(project: Project) : AbstractModLoaderConfigurat
                 }
             }
 
-//            sourceSets.main {
-//                resources.srcDir("src/generated/resources")
-//            }
-
             configurations.apiCompileClasspath {
                 extendsFrom(configurations.compileClasspath.get())
             }
@@ -94,9 +90,6 @@ abstract class BaseConfiguration(project: Project) : AbstractModLoaderConfigurat
                 configure<PublishingExtension> {
                     publications {
                         register<MavenPublication>("mod") {
-                            version = archivesVersion
-                        }
-                        register<MavenPublication>("api") {
                             version = archivesVersion
                         }
                     }

@@ -42,6 +42,18 @@ abstract class ProjectDslHelper {
     protected val ConfigurationContainer.apiCompileClasspath: NamedDomainObjectProvider<Configuration>
         get() = named("apiCompileClasspath")
 
+    protected val ConfigurationContainer.runtimeElements: NamedDomainObjectProvider<Configuration>
+        get() = named(JavaPlugin.RUNTIME_ELEMENTS_CONFIGURATION_NAME)
+
+    protected val ConfigurationContainer.apiElements: NamedDomainObjectProvider<Configuration>
+        get() = named(JavaPlugin.API_ELEMENTS_CONFIGURATION_NAME)
+
+    protected val ConfigurationContainer.modJars: NamedDomainObjectProvider<Configuration>
+        get() = named("modJars")
+
+    protected val ConfigurationContainer.modApiJars: NamedDomainObjectProvider<Configuration>
+        get() = named("modApiJars")
+
     protected val TaskContainer.processResources: TaskProvider<Copy>
         get() = named(JavaPlugin.PROCESS_RESOURCES_TASK_NAME, Copy::class.java)
 

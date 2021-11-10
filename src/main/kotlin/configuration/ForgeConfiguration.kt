@@ -58,7 +58,6 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                 duplicatesStrategy = DuplicatesStrategy.FAIL
                 inputs.property("version", project.version)
                 filesMatching("META-INF/mods.toml") { expand("version" to project.version) }
-//                from(commonProject.sourceSets["main"].resources)
             }
 
             tasks.jar {
@@ -105,6 +104,16 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                 from(sourceSets["api"].output)
             }
 
+            artifacts {
+                add(configurations.modApiJars.name, tasks.apiJar)
+                add(configurations.modApiJars.name, tasks.apiSourcesJar)
+//                add(configurations.modApiJars.name, apiDeobfJar)
+
+                add(configurations.modJars.name, tasks.jar)
+                add(configurations.modJars.name, tasks.sourcesJar)
+//                add(configurations.modJars.name, deobfJar)
+            }
+
             tasks.assemble {
                 dependsOn(deobfJar, apiDeobfJar)
             }
@@ -123,15 +132,6 @@ class ForgeConfiguration(project: Project, commonProject: Project) : BaseConfigu
                     publications {
                         named<MavenPublication>("mod") {
                             artifactId = archivesBaseName
-                            artifact(tasks.jar)
-                            artifact(tasks.sourcesJar)
-                            artifact(deobfJar)
-                        }
-                        named<MavenPublication>("api") {
-                            artifactId = apiArchivesBaseName
-                            artifact(tasks.apiJar)
-                            artifact(tasks.apiSourcesJar)
-                            artifact(apiDeobfJar)
                         }
                     }
                 }

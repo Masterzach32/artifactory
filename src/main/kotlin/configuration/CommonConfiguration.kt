@@ -28,7 +28,6 @@ class CommonConfiguration(project: Project) : BaseConfiguration(project) {
                 dependsOn(tasks.apiJar)
                 archiveVersion.set(archivesVersion)
                 archiveBaseName.set(apiArchivesBaseName)
-                addNestedDependencies.set(true)
                 input.set(tasks.apiJar.flatMap { it.archiveFile })
                 classpath(configurations.apiCompileClasspath.get())
             }
@@ -41,6 +40,11 @@ class CommonConfiguration(project: Project) : BaseConfiguration(project) {
                 }
             }
 
+            artifacts {
+                add(configurations.modApiJars.name, remapApiJar)
+                add(configurations.modApiJars.name, tasks.apiSourcesJar)
+            }
+
             tasks.assemble {
                 dependsOn(remapApiJar)
             }
@@ -48,13 +52,10 @@ class CommonConfiguration(project: Project) : BaseConfiguration(project) {
             plugins.withType<MavenPublishPlugin> {
                 configure<PublishingExtension> {
                     publications {
-                        named<MavenPublication>("api") {
+                        named<MavenPublication>("mod") {
                             artifactId = apiArchivesBaseName
-                            artifact(remapApiJar).builtBy(remapApiJar)
-                            artifact(tasks.apiSourcesJar)
+                            from(components["mod"])
                         }
-
-                        remove(getByName("mod"))
                     }
                 }
             }
