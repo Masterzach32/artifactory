@@ -1,6 +1,8 @@
 name: Update Gradle Wrapper
 
 on:
+  branches:
+    - "master"
   schedule:
     - cron: "0 8 * * MON"
 
